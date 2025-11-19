@@ -333,7 +333,7 @@
       // بناء HTML
       codesBody.innerHTML = '';
       if (rows.length === 0) {
-        codesBody.innerHTML = <tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد نتائج</td></tr>;
+        codesBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد نتائج</td></tr>`;
         return;
       }
 
@@ -408,16 +408,16 @@
 
     async function toggleBlock(code, toBlock){
       const action = toBlock ? 'حظر' : 'رفع الحظر';
-      if (!confirm(هل متأكد من ${action} الكود ${code} ؟)) return;
+      if (!confirm(`هل متأكد من ${action} الكود ${code} ؟`)) return;
       try {
         await db.ref('approvedStudents/' + code + '/isBlocked').set(toBlock === true);
-        showToast(${action} تم بنجاح);
+        showToast(`${action} تم بنجاح`);
       } catch (err) { console.error(err); showToast('فشل العملية', 'error'); }
     }
 
     async function promptSetExpiry(code, item){
       const curr = item && item.expiry ? new Date(Number(item.expiry)).toLocaleString('ar-EG') : 'غير محدد';
-      const ans = prompt(تعديل انتهاء الصلاحية للكود ${code}\nالوقت الحالي: ${curr}\nأدخل عدد الساعات من الآن (مثلاً 720) أو اتركه فارغًا لإزالة الانتهاء:);
+      const ans = prompt(`تعديل انتهاء الصلاحية للكود ${code}\nالوقت الحالي: ${curr}\nأدخل عدد الساعات من الآن (مثلاً 720) أو اتركه فارغًا لإزالة الانتهاء:`);
       if (ans === null) return;
       const h = ans.trim();
       if (h === '') {
@@ -482,10 +482,10 @@
         const human = expiry ? new Date(Number(expiry)).toLocaleString('ar-EG') : '';
         rows.push([k, it.deviceId || '', expiry, human, it.isBlocked ? 'true' : 'false']);
       }
-      const csv = rows.map(r => r.map(cell => "${String(cell).replace(/"/g,'""')}").join(',')).join('\n');
+      const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
       const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = approvedStudents_export_${Date.now()}.csv; document.body.appendChild(a); a.click();
+      const a = document.createElement('a'); a.href = url; a.download = `approvedStudents_export_${Date.now()}.csv`; document.body.appendChild(a); a.click();
       a.remove(); URL.revokeObjectURL(url);
       showToast('تم تصدير CSV');
     });
