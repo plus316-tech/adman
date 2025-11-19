@@ -9,124 +9,131 @@
   <style>
     :root{ --bg:#071226; --card:#0f1530; --accent1:#a333ff; --accent2:#00f5ff; --muted:rgba(255,255,255,0.6) }
     *{box-sizing:border-box;font-family:'Cairo',sans-serif}
-    body{min-height:100vh;margin:0;padding:28px;background:linear-gradient(180deg,#030416, #071226);color:#fff}
-    .wrap{max-width:1100px;margin:0 auto}
+    body{min-height:100vh;margin:0;padding:28px;background:linear-gradient(180deg,#030416,#071226);color:#fff}
+
+    /* login box */
+    #loginBox{
+      max-width:400px;margin:60px auto;background:rgba(255,255,255,0.05);
+      padding:20px;border-radius:12px;display:none
+    }
+
+    .wrap{max-width:1100px;margin:0 auto;display:none} /* مخفي لحين تسجيل الدخول */
+
     header{display:flex;gap:18px;align-items:center;justify-content:space-between;margin-bottom:18px}
     h1{font-size:1.2rem}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px}
     .grid{display:grid;grid-template-columns:1fr 420px;gap:14px}
     label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
     input,select,button{font-family:'Cairo',sans-serif}
     .form-row{margin-bottom:10px}
     .input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff}
-    .small{font-size:0.85rem}
     .btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041426;cursor:pointer;font-weight:700}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
     .btn:disabled{opacity:0.6;cursor:not-allowed}
-
-    /* table */
     table{width:100%;border-collapse:collapse;margin-top:12px}
     th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right;font-size:0.95rem}
     th{color:var(--muted);font-weight:700}
-    .muted{color:var(--muted);font-size:0.85rem}
-    .actions button{margin-left:6px}
-
     .status{margin-top:8px;padding:8px;border-radius:8px}
     .success{background:rgba(0,245,196,0.06);border:1px solid rgba(0,245,196,0.12);color:#00f5c4}
     .error{background:rgba(255,79,79,0.06);border:1px solid rgba(255,79,79,0.12);color:#ff6b6b}
     .pending{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.12);color:#ffb347}
 
-    /* responsive */
-    @media (max-width:980px){.grid{grid-template-columns:1fr} .wrap{padding:8px}}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>لوحة تحكم -- إدارة أكواد التفعيل (6 أرقام)</h1>
-      <div class="muted">مبني لهيكلتك: <code>approvedStudents/{code}</code></div>
-    </header>
 
-    <div class="grid">
-      <!-- يمين: لوحة توليد الأكواد -->
-      <div class="card">
-        <h3>توليد أكواد جديدة</h3>
-        <div class="form-row">
-          <label>نوع الكود</label>
-          <select id="codeType" class="input small">
-            <option value="trial">تجربة (بالدقايق)</option>
-            <option value="subscription">اشتراك (بالأيام)</option>
-          </select>
-        </div>
+<!-- 🔐 نموذج تسجيل دخول الأدمن -->
+<div id="loginBox">
+  <h2 style="text-align:center;margin-bottom:15px">تسجيل دخول الأدمن</h2>
 
-        <div class="form-row" id="durationRow">
-          <label id="durationLabel">المدة (دقايق للتجربة / أيام للاشتراك)</label>
-          <input id="durationInput" class="input" type="number" min="1" value="30">
-        </div>
+  <label>الإيميل</label>
+  <input id="adminEmail" class="input" type="email">
 
-        <div class="form-row">
-          <label>عدد الأكواد</label>
-          <input id="countInput" class="input" type="number" min="1" max="500" value="10">
-        </div>
+  <label>الباسورد</label>
+  <input id="adminPass" class="input" type="password">
 
-        <div class="form-row">
-          <label>بادئة اختيارية (مثال: 9 أو اتركها فارغة، أقصى طول 2)</label>
-          <input id="prefixInput" class="input" type="text" maxlength="2" placeholder="مثال: 9">
-        </div>
+  <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">تسجيل الدخول</button>
 
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="generateBtn" class="btn">توليد أكواد</button>
-          <button id="downloadBtn" class="btn ghost">تنزيل CSV</button>
-        </div>
+  <div id="loginStatus" style="margin-top:12px;color:#ff6b6b;text-align:center"></div>
+</div>
 
-        <div id="genStatus" class="status muted" style="display:none"></div>
+<!-- 🔐 لوحة التحكم (تظهر بعد التحقق) -->
+<div class="wrap" id="dashboardArea">
 
-        <div style="margin-top:12px">
-          <label class="muted">الأكواد المتولدة حديثًا</label>
-          <textarea id="generatedList" rows="6" style="width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff" readonly></textarea>
-        </div>
+  <header>
+    <h1>لوحة تحكم -- إدارة أكواد التفعيل (6 أرقام)</h1>
+    <div class="muted">مسار قواعد البيانات: <code>approvedStudents/{code}</code></div>
+  </header>
+
+  <div class="grid">
+
+    <!-- يمين -->
+    <div class="card">
+      <h3>توليد أكواد جديدة</h3>
+
+      <div class="form-row">
+        <label>نوع الكود</label>
+        <select id="codeType" class="input small">
+          <option value="trial">تجربة (بالدقائق)</option>
+          <option value="subscription">اشتراك (بالأيام)</option>
+        </select>
       </div>
 
-      <!-- يسار: قائمة الأكواد الموجودة -->
-      <div class="card">
-        <h3>قائمة الأكواد</h3>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input id="searchInput" class="input" placeholder="ابحث برقم الكود أو النوع أو الحالة" />
-          <button id="refreshBtn" class="btn">تحديث</button>
-        </div>
-
-        <div id="tableWrap" style="max-height:520px;overflow:auto">
-          <table id="codesTable">
-            <thead>
-              <tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div id="listStatus" class="status muted" style="display:none"></div>
+      <div class="form-row">
+        <label id="durationLabel">المدة</label>
+        <input id="durationInput" class="input" type="number" min="1" value="30">
       </div>
+
+      <div class="form-row">
+        <label>عدد الأكواد</label>
+        <input id="countInput" class="input" type="number" min="1" max="500" value="10">
+      </div>
+
+      <div class="form-row">
+        <label>بادئة (اختياري)</label>
+        <input id="prefixInput" class="input" maxlength="2">
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <button id="generateBtn" class="btn">توليد</button>
+        <button id="downloadBtn" class="btn ghost">تنزيل CSV</button>
+      </div>
+
+      <div id="genStatus" class="status" style="display:none"></div>
+
+      <textarea id="generatedList" rows="6" style="margin-top:12px;width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff" readonly></textarea>
     </div>
 
-    <div style="height:12px"></div>
-    <div class="muted">ملاحظة: التطبيق يستخدم المسار <code>approvedStudents/{code}</code>. الحقول التي نضعها لكل كود:
-      <ul>
-        <li><code>expiry</code> -- timestamp (Number)</li>
-        <li><code>isBlocked</code> -- Boolean</li>
-        <li><code>deviceId</code> -- String أو غير موجود</li>
-        <li><code>type</code> -- "trial" أو "subscription"</li>
-        <li><code>duration</code> -- القيمة بالأرقام (دقايق إن كان trial، أيام إن كان subscription)</li>
-        <li><code>createdAt</code> -- timestamp</li>
-      </ul>
+    <!-- يسار -->
+    <div class="card">
+      <h3>قائمة الأكواد</h3>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="searchInput" class="input" placeholder="بحث...">
+        <button id="refreshBtn" class="btn">تحديث</button>
+      </div>
+
+      <div id="tableWrap" style="max-height:520px;overflow:auto">
+        <table id="codesTable">
+          <thead><tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="listStatus" class="status" style="display:none"></div>
     </div>
+
   </div>
 
-  <!-- Firebase compat -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
 <script>
-  // إعداد Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
     authDomain: "website-83e14.firebaseapp.com",
@@ -134,16 +141,50 @@
     projectId: "website-83e14",
     storageBucket: "website-83e14.firebasestorage.app",
     messagingSenderId: "994953388464",
-    appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
-    measurementId: "G-7PN256M5PG"
+    appId: "1:994953388464:web:9c244de2a4fdcf8561f675"
   };
 
-  if (typeof firebase === 'undefined' || !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
   const db = firebase.database();
 
-  // DOM elements
+  const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
+
+  // ====== نظام تسجيل الدخول ======
+  window.onload = () => {
+    auth.onAuthStateChanged(user => {
+      if (user && user.uid === ADMIN_UID) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("dashboardArea").style.display = "block";
+      } else {
+        auth.signOut();
+        document.getElementById("dashboardArea").style.display = "none";
+        document.getElementById("loginBox").style.display = "block";
+      }
+    });
+  };
+
+  document.getElementById("loginBtn").onclick = async () => {
+    const email = adminEmail.value.trim();
+    const pass = adminPass.value.trim();
+    const status = document.getElementById("loginStatus");
+
+    status.textContent = "جاري تسجيل الدخول...";
+
+    try {
+      const result = await auth.signInWithEmailAndPassword(email, pass);
+      if (result.user.uid !== ADMIN_UID) {
+        status.textContent = "❌ هذا الحساب ليس أدمن";
+        auth.signOut();
+      }
+    } catch (e) {
+      status.textContent = "خطأ: " + e.message;
+    }
+  };
+
+  // ====== الكود الخاص بلوحة التحكم كما هو ======
+
   const codeType = document.getElementById('codeType');
   const durationInput = document.getElementById('durationInput');
   const durationLabel = document.getElementById('durationLabel');
@@ -161,86 +202,74 @@
   const DIGITS = 6;
 
   codeType.addEventListener('change', () => {
-    if (codeType.value === 'trial') {
-      durationLabel.textContent = 'المدة (دقايق للتجربة)';
-      durationInput.value = 30;
-    } else {
-      durationLabel.textContent = 'المدة (أيام للاشتراك)';
-      durationInput.value = 30;
-    }
+    durationLabel.textContent = codeType.value === "trial" ?
+      "المدة (دقائق)" : "المدة (أيام)";
   });
 
   function generateNumericCode(prefix = '') {
-    const num = Math.floor(Math.random() * 1000000);
-    return prefix + String(num).padStart(DIGITS, '0');
+    return prefix + String(Math.floor(Math.random() * 1000000)).padStart(6,"0");
   }
 
-  async function isCodeExists(code) {
-    const snap = await db.ref("approvedStudents/" + code).once("value");
+  async function isCodeExists(code){
+    const snap = await db.ref("approvedStudents/"+code).once("value");
     return snap.exists();
   }
 
-  function showGenStatus(txt, cls='muted') {
-    genStatus.style.display = 'block';
-    genStatus.className = 'status ' + cls;
-    genStatus.textContent = txt;
+  function showGenStatus(text, cls="pending"){
+    genStatus.style.display = "block";
+    genStatus.className = "status " + cls;
+    genStatus.textContent = text;
   }
 
-  // 🚀 التعديل هنا هو الأهم
-  async function generateBatch() {
+  async function generateBatch(){
     const type = codeType.value;
-    const duration = Number(durationInput.value) || 1;
-    const count = Math.min(500, Math.max(1, Number(countInput.value) || 1));
-    let prefix = (prefixInput.value || '').trim();
-    if (prefix.length > 2) prefix = prefix.substring(0, 2);
+    const duration = Number(durationInput.value);
+    const count = Math.min(500, Math.max(1, Number(countInput.value)));
+    let prefix = prefixInput.value.trim();
+    if(prefix.length > 2) prefix = prefix.substring(0,2);
 
-    generatedList.value = '';
+    generatedList.value = "";
     showGenStatus("⏳ جاري إنشاء الأكواد...", "pending");
     generateBtn.disabled = true;
 
     const created = [];
 
-    for (let i = 0; i < count; i++) {
-      let code = '';
-      let attempts = 0;
-
-      while (attempts < 12) {
+    for(let i=0;i<count;i++){
+      let code="", attempts=0;
+      while(attempts < 12){
         code = generateNumericCode(prefix);
-        if (!(await isCodeExists(code))) break;
+        if(!await isCodeExists(code)) break;
         attempts++;
       }
-
-      if (attempts >= 12) continue;
+      if(attempts>=12) continue;
 
       const now = Date.now();
 
-      // ⛔ تم حذف حساب expiry هنا
-      // ⛔ سيتم حسابه عند التفعيل فقط
       const payload = {
-        expiry: null,
-        activationAt: null,
-        isBlocked: false,
-        deviceId: null,
-        type: type,
-        duration: duration,
-        createdAt: now
+        expiry:null,
+        activationAt:null,
+        deviceId:null,
+        isBlocked:false,
+        type:type,
+        duration:duration,
+        createdAt:now
       };
 
-      await db.ref("approvedStudents/" + code).set(payload);
-      created.push({code, ...payload});
+      await db.ref("approvedStudents/"+code).set(payload);
+      created.push(code);
       generatedList.value += code + "\n";
     }
 
-    showGenStatus(`✅ تم إنشاء ${created.length} كود`, "success");
+    showGenStatus(`تم إنشاء ${created.length} كود`, "success");
     generateBtn.disabled = false;
-    generateBtn.dataset.last = JSON.stringify(created);
     refreshTable();
   }
 
-  generateBtn.addEventListener("click", generateBatch);
+  generateBtn.onclick = generateBatch;
+  refreshBtn.onclick = refreshTable;
+  searchInput.oninput = () => setTimeout(refreshTable,300);
 
-  // تحميل قائمة الأكواد
-  async function refreshTable() {
+  async function refreshTable(){
     tableBody.innerHTML = "";
     listStatus.style.display = "block";
     listStatus.className = "status pending";
@@ -248,68 +277,64 @@
 
     const snap = await db.ref("approvedStudents").orderByKey().limitToLast(500).once("value");
     const data = snap.val() || {};
-    const arr = Object.keys(data).reverse().map(k => ({code:k, ...data[k]}));
 
-    const q = (searchInput.value || "").trim();
+    const arr = Object.keys(data).reverse().map(k=>({code:k,...data[k]}));
+    const q = (searchInput.value||"").trim();
     const filtered = arr.filter(x =>
-      !q || x.code.includes(q) || (x.deviceId || "").includes(q)
+      !q || x.code.includes(q) || (x.deviceId||"").includes(q)
     );
 
-    if (!filtered.length) {
-      listStatus.className = 'status error';
-      listStatus.textContent = 'لا توجد أكواد';
+    if(!filtered.length){
+      listStatus.className="status error";
+      listStatus.textContent="لا توجد نتائج";
       return;
     }
 
-    listStatus.style.display = 'none';
+    listStatus.style.display = "none";
 
-    for (const it of filtered) {
-      const expiryText = it.expiry ? new Date(it.expiry).toLocaleString('ar-EG') : "--";
-      const state = it.isBlocked ? "محظور" : (it.expiry && it.expiry <= Date.now() ? "منتهي" : "ساري");
+    for(const it of filtered){
+      const expiryText = it.expiry ? new Date(it.expiry).toLocaleString("ar-EG") : "--";
+      const state = it.isBlocked ? "محظور" :
+                    it.expiry && it.expiry <= Date.now() ? "منتهي" : "ساري";
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td><b>${it.code}</b></td>
         <td>${it.type}</td>
         <td>${expiryText}</td>
-        <td>${it.deviceId || '-'}</td>
+        <td>${it.deviceId || "-"}</td>
         <td>${state}</td>
         <td>
           <button class="btn unblockBtn" data-code="${it.code}">إعادة ضبط</button>
           <button class="btn blockBtn" data-code="${it.code}">حظر</button>
-          <button class="btn extendBtn" data-code="${it.code}">تمديد</button>
           <button class="btn ghost deleteBtn" data-code="${it.code}">حذف</button>
         </td>
       `;
       tableBody.appendChild(tr);
     }
 
-    document.querySelectorAll(".unblockBtn").forEach(b => b.addEventListener("click", resetDevice));
-    document.querySelectorAll(".blockBtn").forEach(b => b.addEventListener("click", blockCode));
-    document.querySelectorAll(".extendBtn").forEach(b => b.addEventListener("click", extendCode));
-    document.querySelectorAll(".deleteBtn").forEach(b => b.addEventListener("click", deleteCode));
+    document.querySelectorAll(".unblockBtn").forEach(b=>b.onclick = resetDevice);
+    document.querySelectorAll(".blockBtn").forEach(b=>b.onclick = blockCode);
+    document.querySelectorAll(".deleteBtn").forEach(b=>b.onclick = deleteCode);
   }
 
-  refreshBtn.addEventListener("click", refreshTable);
-  searchInput.addEventListener("input", () => setTimeout(refreshTable, 300));
-
-  async function resetDevice(e) {
+  async function resetDevice(e){
     const code = e.target.dataset.code;
-    await db.ref("approvedStudents/" + code + "/deviceId").remove();
+    await db.ref("approvedStudents/"+code+"/deviceId").remove();
     alert("تم مسح الجهاز");
     refreshTable();
   }
 
-  async function blockCode(e) {
+  async function blockCode(e){
     const code = e.target.dataset.code;
-    await db.ref("approvedStudents/" + code + "/isBlocked").set(true);
+    await db.ref("approvedStudents/"+code+"/isBlocked").set(true);
     alert("تم الحظر");
     refreshTable();
   }
 
-  async function deleteCode(e) {
+  async function deleteCode(e){
     const code = e.target.dataset.code;
-    await db.ref("approvedStudents/" + code).remove();
+    await db.ref("approvedStudents/"+code).remove();
     alert("تم الحذف");
     refreshTable();
   }
