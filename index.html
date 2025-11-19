@@ -211,7 +211,7 @@ const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
   });
 
   /********** باقي الكود كما هو بالضبط  — لا تغيير إطلاقًا **********/
-  function generateCode() {
+function generateCode() {
   const digits = "0123456789";  
   let code = "";
   for (let i = 0; i < 6; i++) {
@@ -220,167 +220,178 @@ const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
   return code;
 }
 
+const statTotal=document.getElementById('statTotal');
+const statActive=document.getElementById('statActive');
+const statExpired=document.getElementById('statExpired');
+const statBlocked=document.getElementById('statBlocked');
 
-  // توليد و إدارة و عرض و CSV و الحظر ... (كل الكود الأصلي يبقى كما هو)
-  // -----------------------------------------------------------
-  // نفس كودك 100% بدون أي تعديل
-  // -----------------------------------------------------------
+const genBtn=document.getElementById('genBtn');
+const genSingleBtn=document.getElementById('genSingleBtn');
+const exportBtn=document.getElementById('exportBtn');
+const codesTable=document.getElementById('codesTable');
+const blockedTable=document.getElementById('blockedTable');
+const searchInput=document.getElementById('searchInput');
 
-  const statTotal=document.getElementById('statTotal');
-  const statActive=document.getElementById('statActive');
-  const statExpired=document.getElementById('statExpired');
-  const statBlocked=document.getElementById('statBlocked');
+genBtn.addEventListener('click',()=>generateAutoCodes());
+genSingleBtn.addEventListener('click',()=>generateSingleCode());
 
-  const genBtn=document.getElementById('genBtn');
-  const genSingleBtn=document.getElementById('genSingleBtn');
-  const exportBtn=document.getElementById('exportBtn');
-  const codesTable=document.getElementById('codesTable');
-  const blockedTable=document.getElementById('blockedTable');
-  const searchInput=document.getElementById('searchInput');
+/* 🔥 توليد كود واحد — الآن يحفظ في approvedStudents */
+function generateSingleCode(){
+  if(!isAdmin())return alert("غير مسموح");
+  const type=document.getElementById('autoDurationType').value;
+  const val=parseInt(document.getElementById('autoDurationValue').value);
+  if(!val)return alert("اكتب قيمة المدة");
 
-  genBtn.addEventListener('click',()=>generateAutoCodes());
-  genSingleBtn.addEventListener('click',()=>generateSingleCode());
+  const code=generateCode();
+  const expiresAt=calcExpiry(type,val);
 
-  function generateSingleCode(){
-    if(!isAdmin())return alert("غير مسموح");
-    const type=document.getElementById('autoDurationType').value;
-    const val=parseInt(document.getElementById('autoDurationValue').value);
-    if(!val)return alert("اكتب قيمة المدة");
+  db.ref('approvedStudents/'+code).set({
+    expiresAt,
+    createdAt: Date.now(),
+    active: true,
+    usedBy: '',
+    deviceId: ''
+  }).then(()=>alert("تم إنشاء كود: "+code));
+}
+
+/* 🔥 توليد مجموعة أكواد — الآن يحفظ في approvedStudents */
+function generateAutoCodes(){
+  if(!isAdmin())return alert("غير مسموح");
+  const count=parseInt(document.getElementById('autoCount').value);
+  const type=document.getElementById('autoDurationType').value;
+  const val=parseInt(document.getElementById('autoDurationValue').value);
+  if(!count)return alert("اكتب عدد صحيح");
+  if(!val)return alert("اكتب قيمة المدة");
+
+  const updates={};
+
+  for(let i=0;i<count;i++){
     const code=generateCode();
-    const expiresAt=calcExpiry(type,val);
-    db.ref('approvedCodes/'+code).set({
-      expiresAt,createdAt:Date.now(),active:true,usedBy:'',deviceId:''
-    }).then(()=>alert("تم إنشاء كود: "+code));
+    updates['approvedStudents/'+code]={
+      expiresAt: calcExpiry(type,val),
+      createdAt: Date.now(),
+      active: true,
+      usedBy: '',
+      deviceId: ''
+    };
   }
 
-  function generateAutoCodes(){
-    if(!isAdmin())return alert("غير مسموح");
-    const count=parseInt(document.getElementById('autoCount').value);
-    const type=document.getElementById('autoDurationType').value;
-    const val=parseInt(document.getElementById('autoDurationValue').value);
-    if(!count)return alert("اكتب عدد صحيح");
-    if(!val)return alert("اكتب قيمة المدة");
-    const updates={};
-    for(let i=0;i<count;i++){
-      const code=generateCode();
-      updates['approvedCodes/'+code]={
-        expiresAt:calcExpiry(type,val),
-        createdAt:Date.now(),
-        active:true,
-        usedBy:'',
-        deviceId:''
-      };
-    }
-    db.ref().update(updates).then(()=>alert("✔ تم توليد "+count+" كود"));
-  }
+  db.ref().update(updates).then(()=>alert("✔ تم توليد "+count+" كود"));
+}
 
-  function calcExpiry(type,val){
-    const now=Date.now();
-    if(type==='minutes')return now+val*60*1000;
-    if(type==='hours')return now+val*60*60*1000;
-    if(type==='days')return now+val*24*60*60*1000;
-    return now;
-  }
+function calcExpiry(type,val){
+  const now=Date.now();
+  if(type==='minutes')return now+val*60*1000;
+  if(type==='hours')return now+val*60*60*1000;
+  if(type==='days')return now+val*24*60*60*1000;
+  return now;
+}
 
-  function isAdmin(){
-    const u=auth.currentUser;
-    return u && u.uid===ADMIN_UID;
-  }
+function isAdmin(){
+  const u=auth.currentUser;
+  return u && u.uid===ADMIN_UID;
+}
 
-  let latestCodes={};
-  function loadCodesRealtime(){
-    const ref=db.ref('approvedCodes');
-    ref.on('value',snap=>{
-      const data=snap.val()||{};
-      latestCodes=data;
-      renderCodesTable(data);
-      updateStats();
-    });
-  }
+/* 🔥 قراءة الأكواد — الآن يقرأ approvedStudents */
+let latestCodes={};
+function loadCodesRealtime(){
+  const ref=db.ref('approvedStudents');
+  ref.on('value',snap=>{
+    const data=snap.val()||{};
+    latestCodes=data;
+    renderCodesTable(data);
+    updateStats();
+  });
+}
 
-  function renderCodesTable(data){
-    const q=(searchInput.value||'').trim().toLowerCase();
-    codesTable.innerHTML="";
-    const rows=Object.keys(data).sort();
-    rows.forEach(code=>{
-      const d=data[code];
-      const exp=d.expiresAt||0;
-      const active=d.active&&(exp>Date.now());
-      const state=active?"نشط":"منتهي";
-      const created=d.createdAt?new Date(d.createdAt).toLocaleString():"-";
-      const deviceId=d.deviceId||'-';
+/* 🔥 عرض جدول الأكواد */
+function renderCodesTable(data){
+  const q=(searchInput.value||'').trim().toLowerCase();
+  codesTable.innerHTML="";
+  const rows=Object.keys(data).sort();
 
-      if(q && !code.toLowerCase().includes(q)
-           && !state.includes(q)
-           && !deviceId.toLowerCase().includes(q)) return;
+  rows.forEach(code=>{
+    const d=data[code];
+    const exp=d.expiresAt||0;
+    const active=d.active && (exp > Date.now());
+    const state=active ? "نشط" : "منتهي";
+    const created=d.createdAt ? new Date(d.createdAt).toLocaleString() : "-";
+    const deviceId=d.deviceId || "-";
 
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${code}</td>
-        <td>${new Date(exp).toLocaleString()}</td>
-        <td>${state}</td>
-        <td>${deviceId}</td>
-        <td>${created}</td>
-        <td><button class="btn-sm btn-copy" data-code="${code}">نسخ</button></td>
-        <td><button class="btn-sm btn-block" data-device="${deviceId}" data-code="${code}">
-          حظر
-        </button></td>
-        <td><button class="btn-sm btn-del" data-code="${code}">حذف</button></td>
-      `;
-      codesTable.appendChild(tr);
-    });
+    if(q && !code.toLowerCase().includes(q)
+         && !state.includes(q)
+         && !deviceId.toLowerCase().includes(q)) return;
 
-    document.querySelectorAll('.btn-copy').forEach(btn=>{
-      btn.onclick=e=>{
-        const c=e.target.dataset.code;
-        navigator.clipboard.writeText(c);
-        alert("تم نسخ: "+c);
-      };
-    });
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${code}</td>
+      <td>${new Date(exp).toLocaleString()}</td>
+      <td>${state}</td>
+      <td>${deviceId}</td>
+      <td>${created}</td>
+      <td><button class="btn-sm btn-copy" data-code="${code}">نسخ</button></td>
+      <td><button class="btn-sm btn-block" data-device="${deviceId}" data-code="${code}">حظر</button></td>
+      <td><button class="btn-sm btn-del" data-code="${code}">حذف</button></td>
+    `;
+    codesTable.appendChild(tr);
+  });
 
-    document.querySelectorAll('.btn-del').forEach(btn=>{
-      btn.onclick=e=>{
-        const c=e.target.dataset.code;
-        if(confirm("حذف الكود "+c+" ؟"))
-          db.ref('approvedCodes/'+c).remove();
-      };
-    });
-  }
+  document.querySelectorAll('.btn-copy').forEach(btn=>{
+    btn.onclick=e=>{
+      const c=e.target.dataset.code;
+      navigator.clipboard.writeText(c);
+      alert("تم نسخ: "+c);
+    };
+  });
 
-  searchInput.addEventListener('input',()=>renderCodesTable(latestCodes));
+  document.querySelectorAll('.btn-del').forEach(btn=>{
+    btn.onclick=e=>{
+      const c=e.target.dataset.code;
+      if(confirm("حذف الكود "+c+" ؟"))
+        db.ref('approvedStudents/'+c).remove();
+    };
+  });
+}
 
-  function updateStats(){
-    const now=Date.now();
-    const keys=Object.keys(latestCodes);
-    let a=0,b=0;
-    keys.forEach(k=>{
-      const e=latestCodes[k].expiresAt||0;
-      if(e>now && latestCodes[k].active)a++;
-      else b++;
-    });
-    statTotal.textContent=keys.length;
-    statActive.textContent=a;
-    statExpired.textContent=b;
-  }
+searchInput.addEventListener('input',()=>renderCodesTable(latestCodes));
 
-  function blockDevice(id){
-    if(!isAdmin())return alert("غير مسموح");
-    if(!id)return alert("Device ID غير موجود");
-    db.ref('blockedDevices/'+id).set({
-      uid:auth.currentUser.uid,
-      blockedAt:Date.now(),
-      reason:"admin"
-    }).then(()=>alert("تم الحظر"));
-  }
+/* 🔥 تحديث الإحصائيات */
+function updateStats(){
+  const now=Date.now();
+  const keys=Object.keys(latestCodes);
+  let a=0,b=0;
 
-  function loadBlockedRealtime(){
-    const ref=db.ref('blockedDevices');
-    ref.on('value',snap=>{
-      const data=snap.val()||{};
-      renderBlockedTable(data);
-      statBlocked.textContent=Object.keys(data).length;
-    });
-  }
+  keys.forEach(k=>{
+    const e=latestCodes[k].expiresAt||0;
+    if(e>now && latestCodes[k].active) a++;
+    else b++;
+  });
+
+  statTotal.textContent=keys.length;
+  statActive.textContent=a;
+  statExpired.textContent=b;
+}
+
+/* نظام الحظر كما هو */
+function blockDevice(id){
+  if(!isAdmin())return alert("غير مسموح");
+  if(!id)return alert("Device ID غير موجود");
+  db.ref('blockedDevices/'+id).set({
+    uid:auth.currentUser.uid,
+    blockedAt:Date.now(),
+    reason:"admin"
+  }).then(()=>alert("تم الحظر"));
+}
+
+function loadBlockedRealtime(){
+  const ref=db.ref('blockedDevices');
+  ref.on('value',snap=>{
+    const data=snap.val()||{};
+    renderBlockedTable(data);
+    statBlocked.textContent=Object.keys(data).length;
+  });
+}
+
 
   function renderBlockedTable(data){
     blockedTable.innerHTML="";
