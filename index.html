@@ -1,159 +1,125 @@
 <!doctype html>
+
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لوحة تحكم — منصة 1383 (Admin)</title>
-
-  <!-- خطوط وأيقونات -->
+  <title>لوحة تحكم - إدارة أكواد التفعيل (منصة 1383)</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-  <!-- Firebase compat (نفس نسخ الصفحة الأصلية) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
   <style>
-    :root{
-      --bg-1: #0f044a; --bg-2: #1a004d; --neon-cyan: #00f5ff; --neon-magenta: #a333ff;
-      --neon-green: #00f5c4; --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.08);
-      --muted: rgba(255,255,255,0.6);
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif}
-    html,body{height:100%}
-    body{
-      min-height:100vh; background: radial-gradient(1200px 600px at 10% 20%, rgba(163,51,255,0.12), transparent),
-        radial-gradient(800px 400px at 90% 80%, rgba(0,245,255,0.08), transparent), linear-gradient(180deg,var(--bg-1),var(--bg-2));
-      color:#fff; padding:28px; display:flex; align-items:flex-start; justify-content:center;
-    }
+    :root{ --bg:#071226; --card:#0f1530; --accent1:#a333ff; --accent2:#00f5ff; --muted:rgba(255,255,255,0.6) }
+    *{box-sizing:border-box;font-family:'Cairo',sans-serif}
+    body{min-height:100vh;margin:0;padding:28px;background:linear-gradient(180deg,#030416, #071226);color:#fff}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;gap:18px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:1.2rem}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:14px}label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
+input,select,button{font-family:'Cairo',sans-serif}
+.form-row{margin-bottom:10px}
+.input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff}
+.small{font-size:0.85rem}
+.btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041426;cursor:pointer;font-weight:700}
+.btn:disabled{opacity:0.6;cursor:not-allowed}
 
-    .container{ width:100%; max-width:1100px }
-    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px }
-    header h1{ font-size:1.4rem }
-    header .actions{ display:flex; gap:8px; align-items:center }
+/* table */
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right;font-size:0.95rem}
+th{color:var(--muted);font-weight:700}
+.muted{color:var(--muted);font-size:0.85rem}
+.actions button{margin-left:6px}
 
-    .card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid var(--glass-border);
-      border-radius:12px; padding:18px; box-shadow: 0 20px 60px rgba(10,6,30,0.6);
-    }
+.status{margin-top:8px;padding:8px;border-radius:8px}
+.success{background:rgba(0,245,196,0.06);border:1px solid rgba(0,245,196,0.12);color:#00f5c4}
+.error{background:rgba(255,79,79,0.06);border:1px solid rgba(255,79,79,0.12);color:#ff6b6b}
+.pending{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.12);color:#ffb347}
 
-    .controls{ display:flex; gap:8px; margin-bottom:12px; align-items:center }
-    .search{ padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.02); color:#fff }
-    .btn{ padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; background:linear-gradient(90deg,var(--neon-magenta),var(--neon-cyan)); color:#051226 }
-    .btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted) }
-
-    table{ width:100%; border-collapse:collapse; margin-top:8px }
-    th,td{ padding:10px 8px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.03); font-size:0.95rem }
-    th{ color:var(--muted); font-weight:600 }
-    td small{ display:block; color:rgba(255,255,255,0.6); font-weight:600 }
-
-    .pill{ display:inline-block; padding:6px 8px; border-radius:8px; font-weight:700; font-size:0.85rem }
-    .pill.ok{ background: rgba(0,245,196,0.08); color:var(--neon-green); border:1px solid rgba(0,245,196,0.12) }
-    .pill.block{ background: rgba(255,79,79,0.06); color:#ff6b6b; border:1px solid rgba(255,79,79,0.12) }
-    .pill.warn{ background: rgba(255,179,71,0.06); color:#ffb347; border:1px solid rgba(255,179,71,0.12) }
-
-    .right-col{ display:flex; gap:8px; align-items:center }
-
-    /* modals */
-    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:40 }
-    .modal{ width:100%; max-width:520px; background:#07102a; border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.04) }
-    .form-row{ margin-bottom:10px }
-    .input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.02); color:#fff }
-    label{ display:block; margin-bottom:6px; color:var(--muted) }
-
-    .small{ font-size:0.86rem }
-    .muted{ color:var(--muted) }
-
-    footer{ margin-top:12px; color:rgba(255,255,255,0.5); font-size:0.84rem; text-align:center }
-
-    @media (max-width:820px){ .right-col{ flex-wrap:wrap } table th,table td{ font-size:0.82rem } }
+/* responsive */
+@media (max-width:980px){.grid{grid-template-columns:1fr} .wrap{padding:8px}}
 
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <header>
-      <div>
-        <h1>لوحة تحكم — أكواد التفعيل (approvedStudents)</h1>
-        <div class="muted small">عرض وإدارة أكواد التفعيل المرتبطة بقاعدة بيانات Firebase</div>
-      </div>
-      <div class="actions right-col">
-        <input id="searchInput" class="search" placeholder="ابحث عن كود أو جهاز..." />
-        <button id="addBtn" class="btn">إضافة كود جديد</button>
-        <button id="exportBtn" class="btn ghost">تصدير CSV</button>
-        <button id="logoutBtn" class="btn ghost">تسجيل خروج</button>
-      </div>
-    </header>
+      <h1>لوحة تحكم -- إدارة أكواد التفعيل (6 أرقام)</h1>
+      <div class="muted">مبني لهيكلتك: <code>approvedStudents/{code}</code></div>
+    </header><div class="grid">
+  <!-- يمين: لوحة توليد الأكواد -->
+  <div class="card">
+    <h3>توليد أكواد جديدة</h3>
+    <div class="form-row">
+      <label>نوع الكود</label>
+      <select id="codeType" class="input small">
+        <option value="trial">تجربة (بالدقايق)</option>
+        <option value="subscription">اشتراك (بالأيام)</option>
+      </select>
+    </div>
 
-    <div class="card">
-      <div id="statusBar" class="muted small">جاري التحميل...</div>
+    <div class="form-row" id="durationRow">
+      <label id="durationLabel">المدة (دقايق للتجربة / أيام للاشتراك)</label>
+      <input id="durationInput" class="input" type="number" min="1" value="30">
+    </div>
 
-      <table id="codesTable" aria-live="polite">
+    <div class="form-row">
+      <label>عدد الأكواد</label>
+      <input id="countInput" class="input" type="number" min="1" max="500" value="10">
+    </div>
+
+    <div class="form-row">
+      <label>بادئة اختيارية (مثال: 9 أو اتركها فارغة)</label>
+      <input id="prefixInput" class="input" type="text" maxlength="2" placeholder="مثال: 9">
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="generateBtn" class="btn">توليد أكواد</button>
+      <button id="downloadBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)">تنزيل CSV</button>
+    </div>
+
+    <div id="genStatus" class="status muted" style="display:none"></div>
+
+    <div style="margin-top:12px">
+      <label class="muted">الأكواد المتولدة حديثًا</label>
+      <textarea id="generatedList" rows="6" style="width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff"></textarea>
+    </div>
+  </div>
+
+  <!-- يسار: قائمة الأكواد الموجودة -->
+  <div class="card">
+    <h3>قائمة الأكواد</h3>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input id="searchInput" class="input" placeholder="ابحث برقم الكود أو الحالة" />
+      <button id="refreshBtn" class="btn">تحديث</button>
+    </div>
+
+    <div id="tableWrap" style="max-height:520px;overflow:auto">
+      <table id="codesTable">
         <thead>
-          <tr>
-            <th>الكود</th>
-            <th>الجهاز (deviceId)</th>
-            <th>تاريخ الانتهاء</th>
-            <th>الحالة</th>
-            <th style="width:160px">إجراءات</th>
-          </tr>
+          <tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr>
         </thead>
-        <tbody id="tableBody">
-          <!-- rows injected -->
-        </tbody>
+        <tbody></tbody>
       </table>
-
-      <footer>حقوق النشر © منصة الثانويه بلس — لوحة التحكم</footer>
     </div>
+
+    <div id="listStatus" class="status muted" style="display:none"></div>
   </div>
+</div>
 
-  <!-- Modals: login & add/edit -->
-  <div id="loginModal" class="modal-backdrop" style="display:none">
-    <div class="modal">
-      <h3>تسجيل دخول المشرف</h3>
-      <p class="muted small">أدخل كلمة مرور المشرف للوصول للوحة التحكم.</p>
-      <div class="form-row">
-        <label>كلمة المرور</label>
-        <input id="adminPass" class="input" type="password" placeholder="كلمة مرور المشرف" />
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button id="loginCancel" class="btn ghost">إلغاء</button>
-        <button id="loginSubmit" class="btn">تسجيل دخول</button>
-      </div>
-    </div>
-  </div>
+<div style="height:12px"></div>
+<div class="muted">ملاحظة: التطبيق يستخدم المسار <code>approvedStudents/{code}</code>. الحقول التي نضعها لكل كود:
+  <ul>
+    <li><code>expiry</code> -- timestamp (Number)</li>
+    <li><code>isBlocked</code> -- Boolean</li>
+    <li><code>deviceId</code> -- String أو غير موجود</li>
+    <li><code>type</code> -- "trial" أو "subscription"</li>
+    <li><code>duration</code> -- القيمة بالأرقام (دقايق إن كان trial، أيام إن كان subscription)</li>
+    <li><code>createdAt</code> -- timestamp</li>
+  </ul>
+</div>
 
-  <div id="editModal" class="modal-backdrop" style="display:none">
-    <div class="modal">
-      <h3 id="editTitle">إضافة / تعديل كود</h3>
-
-      <div class="form-row">
-        <label>الكود (6 أرقام)</label>
-        <input id="codeInput" class="input" maxlength="6" placeholder="123456" />
-      </div>
-
-      <div class="form-row">
-        <label>deviceId (اختياري)</label>
-        <input id="deviceInput" class="input" placeholder="DID-..." />
-      </div>
-
-      <div class="form-row">
-        <label>تاريخ الانتهاء (تاريخ/وقت)</label>
-        <input id="expiryInput" class="input" type="datetime-local" />
-      </div>
-
-      <div class="form-row">
-        <label><input id="blockedInput" type="checkbox" /> &nbsp;حظر الكود (isBlocked)</label>
-      </div>
-
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button id="editCancel" class="btn ghost">إلغاء</button>
-        <button id="saveBtn" class="btn">حفظ</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /*************** إعداد Firebase - غيّر الإعدادات إن لزم ***************/
+  </div>  <!-- Firebase compat -->  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>  <script>
+    // --- ضع إعدادات Firebase الخاصة بك هنا (أو اتركها كما لديك في صفحة التفعيل) ---
     const firebaseConfig = {
       apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
       authDomain: "website-83e14.firebaseapp.com",
@@ -170,206 +136,246 @@
     }
     const db = firebase.database();
 
-    /*************** مصادقة المشرف (محلي) ***************/
-    // غيّر كلمة المرور قبل النشر
-    const ADMIN_PASSWORD = 'admin123'; // <- غيّرها
+    // عناصر DOM
+    const codeType = document.getElementById('codeType');
+    const durationInput = document.getElementById('durationInput');
+    const durationLabel = document.getElementById('durationLabel');
+    const countInput = document.getElementById('countInput');
+    const prefixInput = document.getElementById('prefixInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const generatedList = document.getElementById('generatedList');
+    const genStatus = document.getElementById('genStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
 
-    const loginModal = document.getElementById('loginModal');
-    const loginSubmit = document.getElementById('loginSubmit');
-    const loginCancel = document.getElementById('loginCancel');
-    const adminPass = document.getElementById('adminPass');
-
-    const container = document.querySelector('.container');
-    const statusBar = document.getElementById('statusBar');
-    const tableBody = document.getElementById('tableBody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const tableBody = document.querySelector('#codesTable tbody');
+    const listStatus = document.getElementById('listStatus');
     const searchInput = document.getElementById('searchInput');
-    const addBtn = document.getElementById('addBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
 
-    const editModal = document.getElementById('editModal');
-    const editTitle = document.getElementById('editTitle');
-    const codeInput = document.getElementById('codeInput');
-    const deviceInput = document.getElementById('deviceInput');
-    const expiryInput = document.getElementById('expiryInput');
-    const blockedInput = document.getElementById('blockedInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const editCancel = document.getElementById('editCancel');
+    // تكوين
+    const DIGITS = 6; // 6 أرقام كما طلبت
 
-    let currentEditKey = null; // code being edited
-    let snapshotCache = {};
-
-    /*************** آلية دخول المشرف (محلي) ***************/
-    function showLogin(){ loginModal.style.display = 'flex'; adminPass.value = ''; adminPass.focus(); }
-    function hideLogin(){ loginModal.style.display = 'none'; }
-
-    loginCancel.addEventListener('click', () => { hideLogin(); /* منع الوصول */ });
-
-    loginSubmit.addEventListener('click', () => {
-      const val = adminPass.value || '';
-      if(val === ADMIN_PASSWORD){
-        localStorage.setItem('admin_logged_1383','1');
-        hideLogin();
-        initApp();
+    codeType.addEventListener('change', () => {
+      if (codeType.value === 'trial') {
+        durationLabel.textContent = 'المدة (دقايق للتجربة)';
+        durationInput.value = 30;
       } else {
-        alert('كلمة مرور خاطئة');
+        durationLabel.textContent = 'المدة (أيام للاشتراك)';
+        durationInput.value = 30;
       }
     });
 
-    // تحقق من حالة الجلسة
-    if(localStorage.getItem('admin_logged_1383') !== '1'){
-      showLogin();
-    } else {
-      initApp();
+    // مولد كود رقمى مكون من 6 أرقام. يمكن إضافة بادئة قصيرة.
+    function generateNumericCode(prefix = ''){
+      // نتأكد أن الناتج طول DIGITS
+      const max = Math.pow(10, DIGITS) - 1;
+      const min = Math.pow(10, DIGITS - 1);
+      const num = Math.floor(Math.random() * (max - min + 1)) + min;
+      return prefix + String(num);
     }
 
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('admin_logged_1383');
-      showLogin();
+    // تحقق من التكرار في قاعدة البيانات
+    async function isCodeExists(code){
+      const snap = await db.ref('approvedStudents/' + code).once('value');
+      return snap.exists();
+    }
+
+    // توليد دفعة من الأكواد
+    async function generateBatch(){
+      const type = codeType.value;
+      const duration = Number(durationInput.value) || 1;
+      const count = Math.min(500, Math.max(1, Number(countInput.value) || 1));
+      const prefix = (prefixInput.value || '').toString();
+
+      generatedList.value = '';
+      genStatus.style.display = 'block';
+      genStatus.className = 'status pending';
+      genStatus.textContent = '⏳ جاري توليد الأكواد... (التحقق من التكرار في قاعدة البيانات)';
+      generateBtn.disabled = true;
+
+      const created = [];
+      const errors = [];
+
+      for (let i = 0; i < count; i++){
+        let attempts = 0;
+        let code = '';
+        while (attempts < 8){ // محاولات قليلة للتفادى
+          code = generateNumericCode(prefix);
+          if (!(await isCodeExists(code))) break;
+          attempts++;
+        }
+        if (attempts >= 8){ errors.push(code); continue; }
+
+        const now = Date.now();
+        let expiry = now;
+        if (type === 'trial'){
+          expiry = now + (duration * 60 * 1000); // دقائق -> ms
+        } else {
+          expiry = now + (duration * 24 * 60 * 60 * 1000); // أيام -> ms
+        }
+
+        const payload = {
+          expiry: expiry,
+          isBlocked: false,
+          deviceId: null,
+          type: type,
+          duration: duration,
+          createdAt: now
+        };
+
+        try {
+          await db.ref('approvedStudents/' + code).set(payload);
+          created.push({code, ...payload});
+          generatedList.value += code + '\n';
+        } catch (err){
+          console.error('create error', err);
+          errors.push(code);
+        }
+      }
+
+      genStatus.className = 'status success';
+      genStatus.textContent = ✅ تم توليد ${created.length} كود. فشل: ${errors.length};
+      generateBtn.disabled = false;
+      // حفظ نتائج للتحميل
+      generateBtn.dataset.last = JSON.stringify(created);
+      refreshTable();
+    }
+
+    generateBtn.addEventListener('click', generateBatch);
+
+    // تحميل CSV
+    downloadBtn.addEventListener('click', () => {
+      const data = generateBtn.dataset.last;
+      if (!data) return alert('لا توجد أكواد متولدة حديثًا');
+      const arr = JSON.parse(data);
+      const header = ['code','type','duration','expiry','deviceId','isBlocked','createdAt'];
+      const rows = arr.map(r => [r.code,r.type,r.duration,r.expiry,r.deviceId || '',r.isBlocked,r.createdAt]);
+      const csv = [header.join(','), ...rows.map(r=>r.map(x=>"${x}").join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'codes.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
 
-    /*************** تهيئة التطبيق: استمع للـ DB واعرض البيانات ***************/
-    function formatDate(ts){ if(!ts) return '-'; const d = new Date(Number(ts)); return d.toLocaleString('ar-EG'); }
-
-    function renderTable(filter=''){
+    // تحميل وعرض قائمة الأكواد (محددة بعدد لعرض أولي)
+    async function refreshTable(){
       tableBody.innerHTML = '';
-      const keys = Object.keys(snapshotCache).sort();
-      if(keys.length === 0){ statusBar.textContent = 'لا توجد سجلات.'; return; }
-      let shown = 0;
-      for(const code of keys){
-        const data = snapshotCache[code] || {};
-        const deviceId = data.deviceId || '-';
-        const expiry = data.expiry || null;
-        const isBlocked = !!data.isBlocked;
+      listStatus.style.display = 'block';
+      listStatus.className = 'status pending';
+      listStatus.textContent = '⏳ جاري جلب أكواد من قاعدة البيانات...';
 
-        // فلترة
-        const hay = (code + ' ' + deviceId).toLowerCase();
-        if(filter && !hay.includes(filter.trim().toLowerCase())) continue;
+      try{
+        const snap = await db.ref('approvedStudents').orderByKey().limitToLast(500).once('value');
+        const data = snap.val() || {};
+        const arr = Object.keys(data).reverse().map(k => ({code:k, ...data[k]}));
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${code}</strong><small>${data.studentName ? data.studentName : ''}</small></td>
-          <td style="max-width:260px;word-break:break-all">${deviceId}</td>
-          <td>${expiry ? formatDate(expiry) : '-'}${expiry && expiry < Date.now() ? ' <span class="pill warn">منتهي</span>' : ''}</td>
-          <td>${isBlocked ? '<span class="pill block">محظور</span>' : '<span class="pill ok">صالح</span>'}</td>
-          <td>
-            <div style="display:flex;gap:8px;justify-content:flex-end">
-              <button class="btn ghost btn-edit" data-code="${code}">تعديل</button>
-              <button class="btn ghost btn-delete" data-code="${code}">حذف</button>
-            </div>
-          </td>
-        `;
-        tableBody.appendChild(tr);
-        shown++;
-      }
-      statusBar.textContent = `عرض ${shown} من ${Object.keys(snapshotCache).length} كود.`;
-    }
+        // فلترة بحث
+        const q = (searchInput.value || '').trim();
+        const filtered = arr.filter(item => {
+          if (!q) return true;
+          return item.code.includes(q) || (item.type && item.type.includes(q)) || (String(item.isBlocked) === q);
+        });
 
-    function initApp(){
-      statusBar.textContent = 'جاري الاتصال بقاعدة البيانات...';
-
-      const ref = db.ref('approvedStudents');
-      // استمع للتغييرات الحيّة
-      ref.on('value', (snap) => {
-        const val = snap.val() || {};
-        snapshotCache = val;
-        renderTable(searchInput.value || '');
-      }, (err) => {
-        console.error('DB listen error', err);
-        statusBar.textContent = 'فشل الاتصال بقاعدة البيانات.';
-      });
-
-      // event delegation للطاولة
-      tableBody.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.btn-edit');
-        const delBtn = e.target.closest('.btn-delete');
-        if(editBtn){ openEdit(editBtn.dataset.code); }
-        if(delBtn){ confirmDelete(delBtn.dataset.code); }
-      });
-
-      // البحث
-      searchInput.addEventListener('input', (ev) => renderTable(ev.target.value));
-
-      // إضافة
-      addBtn.addEventListener('click', () => { openEdit(); });
-
-      // حفظ من المودال
-      saveBtn.addEventListener('click', async () => {
-        const code = (codeInput.value || '').trim();
-        if(!/^\d{6}$/.test(code)) return alert('ادخل كود مكون من 6 أرقام');
-
-        const payload = {};
-        const device = (deviceInput.value || '').trim();
-        if(device) payload.deviceId = device;
-
-        const expVal = expiryInput.value;
-        if(expVal){
-          // تحويل datetime-local إلى timestamp
-          const t = new Date(expVal);
-          if(!isNaN(t)) payload.expiry = t.getTime();
+        if (!filtered.length){
+          listStatus.className = 'status error';
+          listStatus.textContent = 'لا توجد أكواد للعرض.';
+          return;
         }
-        payload.isBlocked = !!blockedInput.checked;
 
-        try{
-          // كتابة أو تحديث
-          await db.ref('approvedStudents/' + code).update(payload);
-          hideEdit();
-        } catch(err){ console.error('save error', err); alert('فشل الحفظ'); }
-      });
+        listStatus.style.display = 'none';
 
-      editCancel.addEventListener('click', hideEdit);
+        for (const it of filtered){
+          const tr = document.createElement('tr');
 
-      exportBtn.addEventListener('click', exportCSV);
-    }
+          const expiryText = it.expiry ? (new Date(it.expiry)).toLocaleString('ar-EG') : '--';
+          const state = it.isBlocked ? 'محظور' : (it.expiry && it.expiry <= Date.now() ? 'منتهي' : 'ساري');
 
-    function openEdit(code){
-      currentEditKey = code || null;
-      editTitle.textContent = code ? 'تعديل الكود ' + code : 'إضافة كود جديد';
-      codeInput.value = code || '';
-      codeInput.disabled = !!code; // لا نسمح بتغيير المفتاح إذا كان موجود
-      deviceInput.value = '';
-      expiryInput.value = '';
-      blockedInput.checked = false;
+          tr.innerHTML = `
+            <td><strong>${it.code}</strong></td>
+            <td>${it.type || '-'}</td>
+            <td class="small">${expiryText}<div class="muted">(${it.duration} ${it.type==='trial'?'دقايق':'أيام'})</div></td>
+            <td class="small">${it.deviceId || '-'}</td>
+            <td>${state}</td>
+            <td class="actions small">
+              <button data-code="${it.code}" class="btn unblockBtn">إعادة ضبط الجهاز</button>
+              <button data-code="${it.code}" class="btn blockBtn">حظر</button>
+              <button data-code="${it.code}" class="btn extendBtn">تمديد</button>
+              <button data-code="${it.code}" class="btn deleteBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)">حذف</button>
+            </td>
+          `;
 
-      if(code && snapshotCache[code]){
-        const data = snapshotCache[code];
-        deviceInput.value = data.deviceId || '';
-        blockedInput.checked = !!data.isBlocked;
-        if(data.expiry){
-          const d = new Date(Number(data.expiry));
-          // تحويل إلى local datetime-local format YYYY-MM-DDThh:mm
-          const pad = n => String(n).padStart(2,'0');
-          const YYYY = d.getFullYear(); const MM = pad(d.getMonth()+1); const DD = pad(d.getDate());
-          const hh = pad(d.getHours()); const mm = pad(d.getMinutes());
-          expiryInput.value = `${YYYY}-${MM}-${DD}T${hh}:${mm}`;
+          tableBody.appendChild(tr);
         }
+
+        // ربط الأحداث للأزرار
+        document.querySelectorAll('.unblockBtn').forEach(b=>b.addEventListener('click', resetDevice));
+        document.querySelectorAll('.blockBtn').forEach(b=>b.addEventListener('click', blockCode));
+        document.querySelectorAll('.extendBtn').forEach(b=>b.addEventListener('click', extendCode));
+        document.querySelectorAll('.deleteBtn').forEach(b=>b.addEventListener('click', deleteCode));
+
+      } catch(err){
+        console.error('refresh error', err);
+        listStatus.className = 'status error';
+        listStatus.textContent = '❌ فشل جلب البيانات من الخادم.';
       }
-
-      editModal.style.display = 'flex';
     }
-    function hideEdit(){ editModal.style.display = 'none'; currentEditKey = null; }
 
-    async function confirmDelete(code){
-      if(!confirm('هل تريد حقًا حذف الكود ' + code + '? هذا الإجراء لا يمكن التراجع عنه.')) return;
+    refreshBtn.addEventListener('click', refreshTable);
+    searchInput.addEventListener('input', () => { setTimeout(refreshTable, 400); });
+
+    // إعادة ضبط الجهاز: مسح deviceId
+    async function resetDevice(e){
+      const code = e.currentTarget.dataset.code;
+      if (!confirm('هل تريد مسح الجهاز المرتبط بهذا الكود؟')) return;
+      try{
+        await db.ref('approvedStudents/' + code + '/deviceId').remove();
+        alert('✅ تم مسح deviceId');
+        refreshTable();
+      }catch(err){console.error(err);alert('فشل العملية')}
+    }
+
+    // حظر كود
+    async function blockCode(e){
+      const code = e.currentTarget.dataset.code;
+      if (!confirm('هل تريد حظر هذا الكود؟')) return;
+      try{
+        await db.ref('approvedStudents/' + code + '/isBlocked').set(true);
+        alert('✅ تم حظر الكود');
+        refreshTable();
+      }catch(err){console.error(err);alert('فشل العملية')}
+    }
+
+    // تمديد الصلاحية (يطلب قيمة)
+    async function extendCode(e){
+      const code = e.currentTarget.dataset.code;
+      const add = prompt('أدخل رقم المدة الإضافية (بالدقايق لو trial أو بالأيام لو subscription):');
+      if (!add) return;
+      const snap = await db.ref('approvedStudents/' + code).once('value');
+      const data = snap.val();
+      if (!data) return alert('الكود غير موجود');
+      const now = Date.now();
+      let newExpiry = data.expiry || now;
+      if (data.type === 'trial'){
+        newExpiry = Math.max(newExpiry, now) + (Number(add) * 60 * 1000);
+      } else {
+        newExpiry = Math.max(newExpiry, now) + (Number(add) * 24 * 60 * 60 * 1000);
+      }
+      await db.ref('approvedStudents/' + code + '/expiry').set(newExpiry);
+      alert('✅ تم التمديد');
+      refreshTable();
+    }
+
+    // حذف كود
+    async function deleteCode(e){
+      const code = e.currentTarget.dataset.code;
+      if (!confirm('هل أنت متأكد من حذف هذا الكود نهائيًا؟')) return;
       try{
         await db.ref('approvedStudents/' + code).remove();
-        alert('تم حذف الكود');
-      } catch(err){ console.error('delete error', err); alert('فشل الحذف'); }
+        alert('✅ تم الحذف');
+        refreshTable();
+      }catch(err){console.error(err);alert('فشل الحذف')}
     }
 
-    function exportCSV(){
-      const rows = [['code','deviceId','expiry','isBlocked']];
-      for(const k of Object.keys(snapshotCache).sort()){
-        const d = snapshotCache[k] || {};
-        rows.push([k, d.deviceId || '', d.expiry || '', d.isBlocked ? '1' : '0']);
-      }
-      const csv = rows.map(r => r.map(cell => '"'+String(cell).replace(/"/g,'""')+'"').join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'approvedStudents_export.csv'; document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-  </script>
-</body>
+    // جلب أولي
+    refreshTable();
+  </script></body>
 </html>
