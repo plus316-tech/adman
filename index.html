@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Admin Dashboard — لوحة تحكم الأكواد</title>
+<title>Admin Dashboard — لوحة تحكم الأكواد (نظام جديد)</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0f0f12;--card:#141418;--accent:#4e00ff;--danger:#ff3b3b;--ok:#00e1a6}
@@ -31,6 +31,7 @@
   .stats{display:flex;gap:10px}
   .stat{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;text-align:center;min-width:120px}
   .right{display:flex;gap:8px;align-items:center}
+  .small-note{font-size:12px;color:rgba(255,255,255,0.6)}
   @media(max-width:900px){.row{grid-template-columns:1fr}.stats{flex-direction:column}}
 </style>
 </head>
@@ -54,7 +55,7 @@
 
     <header>
       <div>
-        <h1>لوحة تحكم الأدمن — الأكواد</h1>
+        <h1>لوحة تحكم الأدمن — الأكواد (نظام التفعيل الجديد)</h1>
         <div class="small">توليد، إدارة، حظر أجهزة، رفع حظر، تصدير</div>
       </div>
       <div class="right">
@@ -70,11 +71,13 @@
 
     <!-- admin area -->
     <div id="adminArea" class="hidden">
+
+      <!-- إحصائيات -->
       <div class="card">
         <div class="stats">
           <div class="stat"><div class="small">إجمالي الأكواد</div><div id="statTotal">-</div></div>
-          <div class="stat"><div class="small">أكواد فعالة</div><div id="statActive">-</div></div>
-          <div class="stat"><div class="small">أكواد منتهية</div><div id="statExpired">-</div></div>
+          <div class="stat"><div class="small">أكواد Premium</div><div id="statPremium">-</div></div>
+          <div class="stat"><div class="small">أكواد Trial</div><div id="statTrial">-</div></div>
           <div class="stat"><div class="small">أجهزة محظورة</div><div id="statBlocked">-</div></div>
         </div>
       </div>
@@ -85,19 +88,41 @@
         <div class="row">
           <div><label>عدد الأكواد</label><input id="autoCount" type="number" placeholder="مثال: 20"></div>
           <div>
-            <label>نوع المدة</label>
-            <select id="autoDurationType">
+            <label>نوع الكود</label>
+            <select id="codeType">
+              <option value="trial">trial</option>
+              <option value="premium">premium</option>
+            </select>
+          </div>
+          <div>
+            <label>المدة (قيمة) — تكتب الرقم وحدد الوحده</label>
+            <input id="autoDurationValue" type="number" placeholder="مثال: 60">
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>وحدة المدة</label>
+            <select id="autoDurationUnit">
               <option value="minutes">بالدقائق</option>
               <option value="hours">بالساعات</option>
               <option value="days">بالالأيام</option>
             </select>
+            <div class="small-note">التخزين سيكون بالدقائق (duration بالم دقائق)</div>
           </div>
-          <div><label>قيمة المدة</label><input id="autoDurationValue" type="number" placeholder="مثال: 60"></div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:12px">
-          <button id="genBtn">⚡ توليد تلقائي</button>
-          <button id="genSingleBtn" style="background:#00b894">➕ توليد واحد</button>
-          <button id="exportBtn" style="background:#1f8bff">⬇ تصدير CSV</button>
+          <div>
+            <label>توليد تلقائي أم يدوي؟</label>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="genBtn">⚡ توليد تلقائي</button>
+              <button id="genSingleBtn" style="background:#00b894">➕ توليد واحد</button>
+            </div>
+          </div>
+          <div>
+            <label>تصدير / استيراد</label>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="exportBtn" style="background:#1f8bff">⬇ تصدير CSV</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -105,13 +130,24 @@
       <div class="card">
         <h3>📋 قائمة الأكواد</h3>
         <div style="margin-bottom:8px">
-          <label>بحث (كود أو حالة)</label>
+          <label>بحث (كود أو حالة أو مالك)</label>
           <input id="searchInput" placeholder="اكتب للبحث...">
         </div>
 
         <table>
           <thead>
-            <tr><th>الكود</th><th>انتهاء</th><th>الحالة</th><th>جهاز</th><th>إنشاء</th><th>نسخ</th><th>حظر جهاز</th><th>حذف</th></tr>
+            <tr>
+              <th>الكود</th>
+              <th>المدة (دق)</th>
+              <th>النوع</th>
+              <th>isBlocked</th>
+              <th>ownerUid</th>
+              <th>Device (owner)</th>
+              <th>إنشاء</th>
+              <th>نسخ</th>
+              <th>حظر/فتح كود</th>
+              <th>حذف</th>
+            </tr>
           </thead>
           <tbody id="codesTable"></tbody>
         </table>
@@ -125,6 +161,20 @@
           <tbody id="blockedTable"></tbody>
         </table>
       </div>
+
+      <!-- students -->
+      <div class="card">
+        <h3>👨‍🎓 الطلاب المفعّلين</h3>
+        <div style="margin-bottom:8px">
+          <label>بحث (UID أو Device)</label>
+          <input id="studentsSearch" placeholder="ابحث عن طالب...">
+        </div>
+        <table>
+          <thead><tr><th>UID</th><th>DeviceId</th><th>Code</th><th>نوع</th><th>تفعيل</th><th>انتهاء</th><th>حذف</th></tr></thead>
+          <tbody id="studentsTable"></tbody>
+        </table>
+      </div>
+
     </div>
   </div>
 
@@ -135,7 +185,6 @@
 
   <script>
   /******* CONFIG *******/
-
  const firebaseConfig = {
   apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
   authDomain: "website-83e14.firebaseapp.com",
@@ -146,268 +195,396 @@
   appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
   measurementId: "G-7PN256M5PG"
 };
-  // ⚠ ضع هنا UID الأدمن الحقيقي
-const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
+// دعم أكثر من أدمن لو احتجت
+const ADMIN_UIDS = ["gI2tAMAFdZfpqj9TspSfWvgu6i33"];
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
+if (!window.firebase) { console.error('Firebase SDK missing'); throw new Error('Firebase SDK missing'); }
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-  const adminArea = document.getElementById('adminArea');
-  const forbidden = document.getElementById('forbidden');
-  const adminUidDisplay = document.getElementById('adminUidDisplay');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const adminLoginCard = document.getElementById("adminLoginCard");
+/******* عناصر الواجهة *******/
+const adminArea = document.getElementById('adminArea');
+const forbidden = document.getElementById('forbidden');
+const adminUidDisplay = document.getElementById('adminUidDisplay');
+const logoutBtn = document.getElementById('logoutBtn');
+const adminLoginCard = document.getElementById("adminLoginCard");
 
-  /********** 🔐 تسجيل دخول الأدمن **********/
-  const adminLoginBtn = document.getElementById('adminLoginBtn');
-  adminLoginBtn.addEventListener('click', async () => {
-    const email = document.getElementById('adminEmail').value.trim();
-    const pass  = document.getElementById('adminPass').value.trim();
-    if (!email || !pass) return alert("اكتب الإيميل والباسورد");
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+const adminEmailInput = document.getElementById('adminEmail');
+const adminPassInput = document.getElementById('adminPass');
 
-    try {
-      const cred = await auth.signInWithEmailAndPassword(email, pass);
+const statTotal = document.getElementById('statTotal');
+const statPremium = document.getElementById('statPremium');
+const statTrial = document.getElementById('statTrial');
+const statBlocked = document.getElementById('statBlocked');
 
-      if (cred.user.uid !== ADMIN_UID) {
-        alert("❌ ليس لديك صلاحية — UID غير مطابق للأدمن");
-        await auth.signOut();
-        return;
-      }
+const genBtn = document.getElementById('genBtn');
+const genSingleBtn = document.getElementById('genSingleBtn');
+const exportBtn = document.getElementById('exportBtn');
+const codesTable = document.getElementById('codesTable');
+const blockedTable = document.getElementById('blockedTable');
+const searchInput = document.getElementById('searchInput');
 
-      alert("✔ تسجيل دخول الأدمن ناجح");
-      adminLoginCard.classList.add("hidden");
+const autoCount = document.getElementById('autoCount');
+const codeType = document.getElementById('codeType');
+const autoDurationValue = document.getElementById('autoDurationValue');
+const autoDurationUnit = document.getElementById('autoDurationUnit');
 
-    } catch(err){
-      alert("❌ خطأ: " + err.message);
-    }
-  });
+const studentsTable = document.getElementById('studentsTable');
+const studentsSearch = document.getElementById('studentsSearch');
 
-  /********** Auth State **********/
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      adminUidDisplay.textContent = 'لم يتم تسجيل الدخول';
-      forbidden.classList.add('hidden');
-      adminArea.classList.add('hidden');
-      adminLoginCard.classList.remove("hidden");
-      return;
-    }
-
-    adminUidDisplay.textContent = "uid: " + user.uid;
-    logoutBtn.classList.remove("hidden");
-    logoutBtn.onclick = () => auth.signOut().then(() => location.reload());
-
-    if (user.uid === ADMIN_UID) {
-      adminArea.classList.remove('hidden');
-      forbidden.classList.add('hidden');
-      adminLoginCard.classList.add("hidden");
-      loadCodesRealtime();
-      loadBlockedRealtime();
-    } else {
-      adminArea.classList.add('hidden');
-      forbidden.classList.remove('hidden');
-      adminLoginCard.classList.remove("hidden");
-    }
-  });
-
-  /********** باقي الكود كما هو بالضبط  — لا تغيير إطلاقًا **********/
-  function generateCode() {
-  const digits = "0123456789";  
+/******* Helpers *******/
+function isAdminUID(uid){
+  return ADMIN_UIDS.includes(uid);
+}
+function msFrom(value, unit){
+  // convert value+unit to minutes (we store duration in minutes)
+  const v = Number(value) || 0;
+  if(unit==='minutes') return v;
+  if(unit==='hours') return v*60;
+  if(unit==='days') return v*60*24;
+  return v;
+}
+function generateCode() {
+  const digits = "0123456789";
   let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += digits[Math.floor(Math.random() * digits.length)];
-  }
+  for (let i = 0; i < 6; i++) code += digits[Math.floor(Math.random() * digits.length)];
   return code;
 }
 
-
-  // توليد و إدارة و عرض و CSV و الحظر ... (كل الكود الأصلي يبقى كما هو)
-  // -----------------------------------------------------------
-  // نفس كودك 100% بدون أي تعديل
-  // -----------------------------------------------------------
-
-  const statTotal=document.getElementById('statTotal');
-  const statActive=document.getElementById('statActive');
-  const statExpired=document.getElementById('statExpired');
-  const statBlocked=document.getElementById('statBlocked');
-
-  const genBtn=document.getElementById('genBtn');
-  const genSingleBtn=document.getElementById('genSingleBtn');
-  const exportBtn=document.getElementById('exportBtn');
-  const codesTable=document.getElementById('codesTable');
-  const blockedTable=document.getElementById('blockedTable');
-  const searchInput=document.getElementById('searchInput');
-
-  genBtn.addEventListener('click',()=>generateAutoCodes());
-  genSingleBtn.addEventListener('click',()=>generateSingleCode());
-
-  function generateSingleCode(){
-    if(!isAdmin())return alert("غير مسموح");
-    const type=document.getElementById('autoDurationType').value;
-    const val=parseInt(document.getElementById('autoDurationValue').value);
-    if(!val)return alert("اكتب قيمة المدة");
-    const code=generateCode();
-    const expiresAt=calcExpiry(type,val);
-    db.ref('approvedCodes/'+code).set({
-      expiresAt,createdAt:Date.now(),active:true,usedBy:'',deviceId:''
-    }).then(()=>alert("تم إنشاء كود: "+code));
-  }
-
-  function generateAutoCodes(){
-    if(!isAdmin())return alert("غير مسموح");
-    const count=parseInt(document.getElementById('autoCount').value);
-    const type=document.getElementById('autoDurationType').value;
-    const val=parseInt(document.getElementById('autoDurationValue').value);
-    if(!count)return alert("اكتب عدد صحيح");
-    if(!val)return alert("اكتب قيمة المدة");
-    const updates={};
-    for(let i=0;i<count;i++){
-      const code=generateCode();
-      updates['approvedCodes/'+code]={
-        expiresAt:calcExpiry(type,val),
-        createdAt:Date.now(),
-        active:true,
-        usedBy:'',
-        deviceId:''
-      };
-    }
-    db.ref().update(updates).then(()=>alert("✔ تم توليد "+count+" كود"));
-  }
-
-  function calcExpiry(type,val){
-    const now=Date.now();
-    if(type==='minutes')return now+val*60*1000;
-    if(type==='hours')return now+val*60*60*1000;
-    if(type==='days')return now+val*24*60*60*1000;
-    return now;
-  }
-
-  function isAdmin(){
-    const u=auth.currentUser;
-    return u && u.uid===ADMIN_UID;
-  }
-
-  let latestCodes={};
-  function loadCodesRealtime(){
-    const ref=db.ref('approvedCodes');
-    ref.on('value',snap=>{
-      const data=snap.val()||{};
-      latestCodes=data;
-      renderCodesTable(data);
-      updateStats();
-    });
-  }
-
-  function renderCodesTable(data){
-    const q=(searchInput.value||'').trim().toLowerCase();
-    codesTable.innerHTML="";
-    const rows=Object.keys(data).sort();
-    rows.forEach(code=>{
-      const d=data[code];
-      const exp=d.expiresAt||0;
-      const active=d.active&&(exp>Date.now());
-      const state=active?"نشط":"منتهي";
-      const created=d.createdAt?new Date(d.createdAt).toLocaleString():"-";
-      const deviceId=d.deviceId||'-';
-
-      if(q && !code.toLowerCase().includes(q)
-           && !state.includes(q)
-           && !deviceId.toLowerCase().includes(q)) return;
-
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${code}</td>
-        <td>${new Date(exp).toLocaleString()}</td>
-        <td>${state}</td>
-        <td>${deviceId}</td>
-        <td>${created}</td>
-        <td><button class="btn-sm btn-copy" data-code="${code}">نسخ</button></td>
-        <td><button class="btn-sm btn-block" data-device="${deviceId}" data-code="${code}">
-          حظر
-        </button></td>
-        <td><button class="btn-sm btn-del" data-code="${code}">حذف</button></td>
-      `;
-      codesTable.appendChild(tr);
-    });
-
-    document.querySelectorAll('.btn-copy').forEach(btn=>{
-      btn.onclick=e=>{
-        const c=e.target.dataset.code;
-        navigator.clipboard.writeText(c);
-        alert("تم نسخ: "+c);
-      };
-    });
-
-    document.querySelectorAll('.btn-del').forEach(btn=>{
-      btn.onclick=e=>{
-        const c=e.target.dataset.code;
-        if(confirm("حذف الكود "+c+" ؟"))
-          db.ref('approvedCodes/'+c).remove();
-      };
-    });
-  }
-
-  searchInput.addEventListener('input',()=>renderCodesTable(latestCodes));
-
-  function updateStats(){
-    const now=Date.now();
-    const keys=Object.keys(latestCodes);
-    let a=0,b=0;
-    keys.forEach(k=>{
-      const e=latestCodes[k].expiresAt||0;
-      if(e>now && latestCodes[k].active)a++;
-      else b++;
-    });
-    statTotal.textContent=keys.length;
-    statActive.textContent=a;
-    statExpired.textContent=b;
-  }
-
-  function blockDevice(id){
-    if(!isAdmin())return alert("غير مسموح");
-    if(!id)return alert("Device ID غير موجود");
-    db.ref('blockedDevices/'+id).set({
-      uid:auth.currentUser.uid,
-      blockedAt:Date.now(),
-      reason:"admin"
-    }).then(()=>alert("تم الحظر"));
-  }
-
-  function loadBlockedRealtime(){
-    const ref=db.ref('blockedDevices');
-    ref.on('value',snap=>{
-      const data=snap.val()||{};
-      renderBlockedTable(data);
-      statBlocked.textContent=Object.keys(data).length;
-    });
-  }
-
-  function renderBlockedTable(data){
-    blockedTable.innerHTML="";
-    const keys=Object.keys(data);
-    if(!keys.length){
-      blockedTable.innerHTML='<tr><td colspan="4">لا يوجد حظر</td></tr>';
+/******* Auth (admin) *******/
+adminLoginBtn.addEventListener('click', async () => {
+  const email = adminEmailInput.value.trim();
+  const pass = adminPassInput.value.trim();
+  if(!email||!pass) return alert('اكتب الإيميل والباسورد');
+  try{
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+    if(!isAdminUID(uid)){
+      alert('❌ ليس لديك صلاحية — UID غير مطابق للأدمن');
+      await auth.signOut();
       return;
     }
-    keys.forEach(id=>{
-      const d=data[id];
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${id}</td>
-        <td>${d.uid}</td>
-        <td>${new Date(d.blockedAt).toLocaleString()}</td>
-        <td><button class="btn-sm btn-unblock" data-id="${id}">رفع</button></td>
-      `;
-      blockedTable.appendChild(tr);
-    });
-
-    document.querySelectorAll('.btn-unblock').forEach(btn=>{
-      btn.onclick=e=>{
-        const id=e.target.dataset.id;
-        if(confirm("رفع الحظر؟")) db.ref('blockedDevices/'+id).remove();
-      };
-    });
+    alert('✔ تسجيل دخول الأدمن ناجح');
+    adminLoginCard.classList.add('hidden');
+  }catch(e){
+    alert('❌ خطأ: ' + (e.message||e));
   }
+});
+
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    adminUidDisplay.textContent = 'لم يتم تسجيل الدخول';
+    forbidden.classList.add('hidden');
+    adminArea.classList.add('hidden');
+    adminLoginCard.classList.remove('hidden');
+    logoutBtn.classList.add('hidden');
+    return;
+  }
+  adminUidDisplay.textContent = 'uid: ' + user.uid;
+  logoutBtn.classList.remove('hidden');
+  logoutBtn.onclick = ()=> auth.signOut().then(()=> location.reload());
+  if(isAdminUID(user.uid)){
+    adminArea.classList.remove('hidden');
+    forbidden.classList.add('hidden');
+    adminLoginCard.classList.add('hidden');
+    // load data
+    loadStudentsRealtime();
+    loadCodesRealtime();
+    loadBlockedRealtime();
+  } else {
+    adminArea.classList.add('hidden');
+    forbidden.classList.remove('hidden');
+    adminLoginCard.classList.remove('hidden');
+  }
+});
+
+/******* Realtime loaders *******/
+let latestCodes = {};
+let studentsMap = {}; // uid -> student object
+let blockedMap = {};  // deviceId/fp -> obj
+
+function loadStudentsRealtime(){
+  const ref = db.ref('approvedStudents');
+  ref.on('value', snap=>{
+    const data = snap.val() || {};
+    studentsMap = data;
+    renderStudentsTable(data);
+    // also update device info in codes table after codes loaded
+    renderCodesTable(latestCodes);
+  });
+}
+
+function loadCodesRealtime(){
+  const ref = db.ref('approvedCodes');
+  ref.on('value', snap=>{
+    const data = snap.val() || {};
+    latestCodes = data;
+    renderCodesTable(data);
+    updateStats();
+  });
+}
+
+function loadBlockedRealtime(){
+  const ref = db.ref('blockedDevices');
+  ref.on('value', snap=>{
+    const data = snap.val() || {};
+    blockedMap = data;
+    renderBlockedTable(data);
+    statBlocked.textContent = Object.keys(data || {}).length;
+  });
+}
+
+/******* Renderers *******/
+function renderCodesTable(data){
+  const q = (searchInput.value||'').trim().toLowerCase();
+  codesTable.innerHTML = '';
+  const rows = Object.keys(data).sort();
+  rows.forEach(code=>{
+    const d = data[code] || {};
+    const duration = Number(d.duration) || 0; // minutes
+    const type = d.type || '';
+    const isBlocked = !!d.isBlocked;
+    const ownerUid = d.ownerUid || '';
+    const createdAt = d.createdAt ? new Date(d.createdAt).toLocaleString() : '-';
+    // find device of owner
+    const ownerDevice = ownerUid && studentsMap[ownerUid] ? (studentsMap[ownerUid].deviceId || '-') : '-';
+
+    if(q && !code.includes(q) && !type.includes(q) && !ownerUid.toLowerCase().includes(q) && !(ownerDevice+'').toLowerCase().includes(q)) return;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${code}</td>
+      <td>${duration}</td>
+      <td>${type}</td>
+      <td>${isBlocked ? 'مقفول' : 'مفتوح'}</td>
+      <td>${ownerUid || '-'}</td>
+      <td>${ownerDevice}</td>
+      <td>${createdAt}</td>
+      <td><button class="btn-sm btn-copy" data-code="${code}">نسخ</button></td>
+      <td>
+        <button class="btn-sm ${isBlocked ? 'btn-unblock' : 'btn-block'}" data-code="${code}">
+          ${isBlocked ? 'فتح' : 'حظر'}
+        </button>
+      </td>
+      <td><button class="btn-sm btn-del" data-code="${code}">حذف</button></td>
+    `;
+    codesTable.appendChild(tr);
+  });
+
+  // actions
+  document.querySelectorAll('.btn-copy').forEach(btn=>{
+    btn.onclick = e => {
+      const c = e.currentTarget.dataset.code;
+      navigator.clipboard.writeText(c);
+      alert('تم نسخ: ' + c);
+    };
+  });
+
+  document.querySelectorAll('.btn-del').forEach(btn=>{
+    btn.onclick = e => {
+      const c = e.currentTarget.dataset.code;
+      if(!confirm('حذف الكود '+c+' ؟')) return;
+      // remove code from approvedCodes
+      db.ref('approvedCodes/'+c).remove().then(()=> alert('تم حذف الكود'));
+    };
+  });
+
+  document.querySelectorAll('.btn-block').forEach(btn=>{
+    btn.onclick = async e => {
+      const c = e.currentTarget.dataset.code;
+      if(!confirm('حظر الكود '+c+' ؟ (سيمنع استخدامه)')) return;
+      await db.ref('approvedCodes/'+c+'/isBlocked').set(true);
+      alert('تم حظر الكود');
+    };
+  });
+
+  document.querySelectorAll('.btn-unblock').forEach(btn=>{
+    btn.onclick = async e => {
+      const c = e.currentTarget.dataset.code;
+      if(!confirm('فتح الكود '+c+' ؟')) return;
+      await db.ref('approvedCodes/'+c+'/isBlocked').set(false);
+      alert('تم فتح الكود');
+    };
+  });
+}
+
+function renderBlockedTable(data){
+  blockedTable.innerHTML = '';
+  const keys = Object.keys(data || {});
+  if(!keys.length){
+    blockedTable.innerHTML = '<tr><td colspan="4">لا يوجد حظر</td></tr>';
+    return;
+  }
+  keys.forEach(id=>{
+    const d = data[id] || {};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${id}</td>
+      <td>${d.reporterUid || '-'}</td>
+      <td>${d.blockedAt ? new Date(d.blockedAt).toLocaleString() : '-'}</td>
+      <td><button class="btn-sm btn-unblock" data-id="${id}">رفع</button></td>
+    `;
+    blockedTable.appendChild(tr);
+  });
+
+  document.querySelectorAll('.btn-unblock').forEach(btn=>{
+    btn.onclick = e => {
+      const id = e.currentTarget.dataset.id;
+      if(confirm('رفع الحظر؟')) db.ref('blockedDevices/'+id).remove();
+    };
+  });
+}
+
+function renderStudentsTable(data){
+  studentsTable.innerHTML = '';
+  const q = (studentsSearch.value||'').trim().toLowerCase();
+  const keys = Object.keys(data || {});
+  if(!keys.length){
+    studentsTable.innerHTML = '<tr><td colspan="7">لا يوجد طلاب مفعلين</td></tr>';
+    return;
+  }
+  keys.forEach(uid=>{
+    const d = data[uid] || {};
+    if(q && !uid.includes(q) && !(d.deviceId||'').toLowerCase().includes(q) && !(d.code||'').includes(q)) return;
+    const activated = d.activationAt ? new Date(d.activationAt).toLocaleString() : '-';
+    const expiry = d.expiry ? new Date(d.expiry).toLocaleString() : '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${uid}</td>
+      <td>${d.deviceId || '-'}</td>
+      <td>${d.code || '-'}</td>
+      <td>${d.type || '-'}</td>
+      <td>${activated}</td>
+      <td>${expiry}</td>
+      <td><button class="btn-sm btn-del" data-uid="${uid}">حذف</button></td>
+    `;
+    studentsTable.appendChild(tr);
+  });
+
+  document.querySelectorAll('#studentsTable .btn-del').forEach(btn=>{
+    btn.onclick = e => {
+      const uid = e.currentTarget.dataset.uid;
+      if(!confirm('حذف بيانات الطالب '+uid+' ؟')) return;
+      db.ref('approvedStudents/'+uid).remove().then(()=> alert('تم حذف الطالب'));
+    };
+  });
+}
+
+/******* Stats *******/
+function updateStats(){
+  const codes = latestCodes || {};
+  let total = 0, premium = 0, trial = 0;
+  Object.keys(codes).forEach(k=>{
+    total++;
+    if((codes[k].type||'') === 'premium') premium++;
+    else if((codes[k].type||'') === 'trial') trial++;
+  });
+  statTotal.textContent = total;
+  statPremium.textContent = premium;
+  statTrial.textContent = trial;
+}
+
+/******* Generation *******/
+genSingleBtn.addEventListener('click', generateSingleCode);
+genBtn.addEventListener('click', generateAutoCodes);
+exportBtn.addEventListener('click', exportCodesCSV);
+
+async function generateSingleCode(){
+  if(!auth.currentUser || !isAdminUID(auth.currentUser.uid)) return alert('غير مسموح');
+  const type = codeType.value;
+  const val = Number(autoDurationValue.value) || 0;
+  const unit = autoDurationUnit.value;
+  if(!val) return alert('اكتب قيمة المدة');
+  const durationMinutes = msFrom(val, unit);
+  const code = generateCode();
+  const payload = {
+    duration: durationMinutes,
+    type,
+    isBlocked: false,
+    ownerUid: '',
+    createdAt: Date.now()
+  };
+  await db.ref('approvedCodes/'+code).set(payload);
+  alert('تم إنشاء كود: ' + code);
+}
+
+async function generateAutoCodes(){
+  if(!auth.currentUser || !isAdminUID(auth.currentUser.uid)) return alert('غير مسموح');
+  const count = parseInt(autoCount.value) || 0;
+  const type = codeType.value;
+  const val = Number(autoDurationValue.value) || 0;
+  const unit = autoDurationUnit.value;
+  if(!count) return alert('اكتب عدد صحيح');
+  if(!val) return alert('اكتب قيمة المدة');
+  const durationMinutes = msFrom(val, unit);
+  const updates = {};
+  for(let i=0;i<count;i++){
+    const code = generateCode();
+    updates['approvedCodes/'+code] = {
+      duration: durationMinutes,
+      type,
+      isBlocked: false,
+      ownerUid: '',
+      createdAt: Date.now()
+    };
+  }
+  await db.ref().update(updates);
+  alert('✔ تم توليد ' + count + ' كود');
+}
+
+/******* Export CSV *******/
+function exportCodesCSV(){
+  const codes = latestCodes || {};
+  const rows = [['code','duration_minutes','type','isBlocked','ownerUid','createdAt']];
+  Object.keys(codes).forEach(c=>{
+    const d = codes[c] || {};
+    rows.push([c, String(d.duration||''), d.type||'', String(!!d.isBlocked), d.ownerUid||'', d.createdAt||'']);
+  });
+  const csv = rows.map(r=> r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'approvedCodes.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/******* Block device helper (by deviceId) *******/
+async function blockDevice(deviceId, reporterUid){
+  if(!deviceId) return alert('Device ID غير موجود');
+  await db.ref('blockedDevices/'+deviceId).set({
+    reporterUid: reporterUid || (auth.currentUser ? auth.currentUser.uid : 'admin'),
+    blockedAt: Date.now(),
+    reason: 'admin'
+  });
+  alert('تم حظر الجهاز: ' + deviceId);
+}
+
+/******* Utility: allow blocking device from codes table by ownerDevice cell click *******/
+codesTable.addEventListener('click', (e)=>{
+  const btn = e.target;
+  if(btn.tagName !== 'BUTTON') return;
+  // already handled above for specific buttons
+});
+
+/******* Search handlers *******/
+searchInput.addEventListener('input', ()=> renderCodesTable(latestCodes));
+studentsSearch.addEventListener('input', ()=> renderStudentsTable(studentsMap));
+
+/******* Init: small guard to ensure structure exists *******/
+(async function initEnsure(){
+  // ensure the root paths exist (no-op if already)
+  try{
+    await db.ref().update({ _meta_exists: true });
+    // then remove the helper key
+    await db.ref('_meta_exists').remove();
+  }catch(e){ /* ignore */ }
+})();
 
   </script>
 </body>
