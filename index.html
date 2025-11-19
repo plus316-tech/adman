@@ -211,12 +211,15 @@ const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
   });
 
   /********** باقي الكود كما هو بالضبط  — لا تغيير إطلاقًا **********/
-  function generateCode(){
-    const chars="gI2tAMAFdZfpqj9TspSfWvgu6i33";
-    let c="";
-    for(let i=0;i<6;i++) c+=chars[Math.floor(Math.random()*chars.length)];
-    return c;
+  function generateCode() {
+  const digits = "0123456789";  
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += digits[Math.floor(Math.random() * digits.length)];
   }
+  return code;
+}
+
 
   // توليد و إدارة و عرض و CSV و الحظر ... (كل الكود الأصلي يبقى كما هو)
   // -----------------------------------------------------------
