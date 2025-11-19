@@ -1,345 +1,158 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لوحة تحكم - إدارة أكواد التفعيل (منصة 1383)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="UTF-8" />
+  <title>THE BEST - تسجيل دخول الطالب</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --bg:#071226; --card:#0f1530; --accent1:#a333ff; --accent2:#00f5ff; --muted:rgba(255,255,255,0.6) }
-    *{box-sizing:border-box;font-family:'Cairo',sans-serif}
-    body{min-height:100vh;margin:0;padding:28px;background:linear-gradient(180deg,#030416,#071226);color:#fff}
-
-    /* login box */
-    #loginBox{
-      max-width:400px;margin:60px auto;background:rgba(255,255,255,0.05);
-      padding:20px;border-radius:12px;display:none
+    * { box-sizing: border-box; font-family:'Cairo',sans-serif; }
+    body {
+      margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at top left,#141E30,#243B55);
+      color:white; overflow:hidden;
     }
-
-    .wrap{max-width:1100px;margin:0 auto;display:none} /* مخفي لحين تسجيل الدخول */
-
-    header{display:flex;gap:18px;align-items:center;justify-content:space-between;margin-bottom:18px}
-    h1{font-size:1.2rem}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px}
-    .grid{display:grid;grid-template-columns:1fr 420px;gap:14px}
-    label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
-    input,select,button{font-family:'Cairo',sans-serif}
-    .form-row{margin-bottom:10px}
-    .input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff}
-    .btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041426;cursor:pointer;font-weight:700}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-    .btn:disabled{opacity:0.6;cursor:not-allowed}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right;font-size:0.95rem}
-    th{color:var(--muted);font-weight:700}
-    .status{margin-top:8px;padding:8px;border-radius:8px}
-    .success{background:rgba(0,245,196,0.06);border:1px solid rgba(0,245,196,0.12);color:#00f5c4}
-    .error{background:rgba(255,79,79,0.06);border:1px solid rgba(255,79,79,0.12);color:#ff6b6b}
-    .pending{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.12);color:#ffb347}
-
-    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .login-box {
+      background:rgba(0,0,0,0.6);padding:40px;border-radius:20px;
+      width:90%;max-width:400px;text-align:center;
+      box-shadow:0 0 20px rgba(0,255,255,0.2);
+    }
+    .login-box input {
+      width:100%;padding:14px;border-radius:12px;margin-bottom:15px;
+      background:#111;color:#fff;font-size:18px;border:none;outline:none;
+      text-align:center;box-shadow:0 0 10px rgba(0,255,255,0.3);
+    }
+    button {
+      width:100%;padding:12px;font-size:18px;border:none;
+      border-radius:8px;background:linear-gradient(90deg,#00c6ff,#0072ff);
+      color:white;cursor:pointer;transition:.3s;
+    }
+    button:hover { transform:scale(1.05); }
+    .error { color:#ff4f4f; }
+    .success { color:#00f5c4; }
+    #contactDev {
+      margin-top:15px;display:none;padding:10px;border-radius:10px;
+      background:linear-gradient(90deg,#25d366,#128c7e);
+      color:white;text-decoration:none;font-size:16px;
+      display:flex;align-items:center;gap:8px;justify-content:center;
+    }
   </style>
 </head>
+
 <body>
+  <div class="login-box">
+    <h1>THE BEST</h1>
+    <h2>ادخل كود الدخول</h2>
 
-<!-- 🔐 نموذج تسجيل دخول الأدمن -->
-<div id="loginBox">
-  <h2 style="text-align:center;margin-bottom:15px">تسجيل دخول الأدمن</h2>
+    <input type="text" id="codeInput" placeholder="CODE">
+    <button onclick="verifyCode()">تسجيل الدخول</button>
 
-  <label>الإيميل</label>
-  <input id="adminEmail" class="input" type="email">
+    <p id="status"></p>
 
-  <label>الباسورد</label>
-  <input id="adminPass" class="input" type="password">
-
-  <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">تسجيل الدخول</button>
-
-  <div id="loginStatus" style="margin-top:12px;color:#ff6b6b;text-align:center"></div>
-</div>
-
-<!-- 🔐 لوحة التحكم (تظهر بعد التحقق) -->
-<div class="wrap" id="dashboardArea">
-
-  <header>
-    <h1>لوحة تحكم -- إدارة أكواد التفعيل (6 أرقام)</h1>
-    <div class="muted">مسار قواعد البيانات: <code>approvedStudents/{code}</code></div>
-  </header>
-
-  <div class="grid">
-
-    <!-- يمين -->
-    <div class="card">
-      <h3>توليد أكواد جديدة</h3>
-
-      <div class="form-row">
-        <label>نوع الكود</label>
-        <select id="codeType" class="input small">
-          <option value="trial">تجربة (بالدقائق)</option>
-          <option value="subscription">اشتراك (بالأيام)</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label id="durationLabel">المدة</label>
-        <input id="durationInput" class="input" type="number" min="1" value="30">
-      </div>
-
-      <div class="form-row">
-        <label>عدد الأكواد</label>
-        <input id="countInput" class="input" type="number" min="1" max="500" value="10">
-      </div>
-
-      <div class="form-row">
-        <label>بادئة (اختياري)</label>
-        <input id="prefixInput" class="input" maxlength="2">
-      </div>
-
-      <div style="display:flex;gap:12px;align-items:center">
-        <button id="generateBtn" class="btn">توليد</button>
-        <button id="downloadBtn" class="btn ghost">تنزيل CSV</button>
-      </div>
-
-      <div id="genStatus" class="status" style="display:none"></div>
-
-      <textarea id="generatedList" rows="6" style="margin-top:12px;width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff" readonly></textarea>
-    </div>
-
-    <!-- يسار -->
-    <div class="card">
-      <h3>قائمة الأكواد</h3>
-
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="searchInput" class="input" placeholder="بحث...">
-        <button id="refreshBtn" class="btn">تحديث</button>
-      </div>
-
-      <div id="tableWrap" style="max-height:520px;overflow:auto">
-        <table id="codesTable">
-          <thead><tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div id="listStatus" class="status" style="display:none"></div>
-    </div>
-
+    <a id="contactDev" href="https://wa.me/201001257486" target="_blank">
+      <img src="https://img.icons8.com/color/48/000000/whatsapp--v1.png" width="20">
+      تواصل مع المطور
+    </a>
   </div>
 
-</div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
-    authDomain: "website-83e14.firebaseapp.com",
-    databaseURL: "https://website-83e14-default-rtdb.firebaseio.com",
-    projectId: "website-83e14",
-    storageBucket: "website-83e14.firebasestorage.app",
-    messagingSenderId: "994953388464",
-    appId: "1:994953388464:web:9c244de2a4fdcf8561f675"
-  };
+const firebaseConfig = {
+  databaseURL: "https://website-83e14-default-rtdb.firebaseio.com/"
+};
 
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  const auth = firebase.auth();
-  const db = firebase.database();
+// 🔥 إنشاء deviceId ثابت
+const deviceId = localStorage.getItem("deviceId") || generateDeviceId();
+localStorage.setItem("deviceId", deviceId);
 
-  const ADMIN_UID = "gI2tAMAFdZfpqj9TspSfWvgu6i33";
+function generateDeviceId() {
+  return "DEV-" + Math.random().toString(36).substring(2, 12);
+}
 
-  // ====== نظام تسجيل الدخول ======
-  window.onload = () => {
-    auth.onAuthStateChanged(user => {
-      if (user && user.uid === ADMIN_UID) {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("dashboardArea").style.display = "block";
-      } else {
-        auth.signOut();
-        document.getElementById("dashboardArea").style.display = "none";
-        document.getElementById("loginBox").style.display = "block";
-      }
-    });
-  };
+// ======================
+//  التحقق من الكود
+// ======================
+function verifyCode() {
+  const code = document.getElementById("codeInput").value.trim();
+  const status = document.getElementById("status");
+  const btn = document.getElementById("contactDev");
 
-  document.getElementById("loginBtn").onclick = async () => {
-    const email = adminEmail.value.trim();
-    const pass = adminPass.value.trim();
-    const status = document.getElementById("loginStatus");
+  status.textContent = "جارٍ التحقق...";
+  status.className = "";
+  btn.style.display = "none";
 
-    status.textContent = "جاري تسجيل الدخول...";
-
-    try {
-      const result = await auth.signInWithEmailAndPassword(email, pass);
-      if (result.user.uid !== ADMIN_UID) {
-        status.textContent = "❌ هذا الحساب ليس أدمن";
-        auth.signOut();
-      }
-    } catch (e) {
-      status.textContent = "خطأ: " + e.message;
-    }
-  };
-
-  // ====== الكود الخاص بلوحة التحكم كما هو ======
-
-  const codeType = document.getElementById('codeType');
-  const durationInput = document.getElementById('durationInput');
-  const durationLabel = document.getElementById('durationLabel');
-  const countInput = document.getElementById('countInput');
-  const prefixInput = document.getElementById('prefixInput');
-  const generateBtn = document.getElementById('generateBtn');
-  const generatedList = document.getElementById('generatedList');
-  const genStatus = document.getElementById('genStatus');
-
-  const refreshBtn = document.getElementById('refreshBtn');
-  const tableBody = document.querySelector('#codesTable tbody');
-  const listStatus = document.getElementById('listStatus');
-  const searchInput = document.getElementById('searchInput');
-
-  const DIGITS = 6;
-
-  codeType.addEventListener('change', () => {
-    durationLabel.textContent = codeType.value === "trial" ?
-      "المدة (دقائق)" : "المدة (أيام)";
-  });
-
-  function generateNumericCode(prefix = '') {
-    return prefix + String(Math.floor(Math.random() * 1000000)).padStart(6,"0");
+  if (code === "") {
+    status.textContent = "❌ أدخل الكود أولاً";
+    status.className = "error";
+    return;
   }
 
-  async function isCodeExists(code){
-    const snap = await db.ref("approvedStudents/"+code).once("value");
-    return snap.exists();
-  }
-
-  function showGenStatus(text, cls="pending"){
-    genStatus.style.display = "block";
-    genStatus.className = "status " + cls;
-    genStatus.textContent = text;
-  }
-
-  async function generateBatch(){
-    const type = codeType.value;
-    const duration = Number(durationInput.value);
-    const count = Math.min(500, Math.max(1, Number(countInput.value)));
-    let prefix = prefixInput.value.trim();
-    if(prefix.length > 2) prefix = prefix.substring(0,2);
-
-    generatedList.value = "";
-    showGenStatus("⏳ جاري إنشاء الأكواد...", "pending");
-    generateBtn.disabled = true;
-
-    const created = [];
-
-    for(let i=0;i<count;i++){
-      let code="", attempts=0;
-      while(attempts < 12){
-        code = generateNumericCode(prefix);
-        if(!await isCodeExists(code)) break;
-        attempts++;
-      }
-      if(attempts>=12) continue;
-
-      const now = Date.now();
-
-      const payload = {
-        expiry:null,
-        activationAt:null,
-        deviceId:null,
-        isBlocked:false,
-        type:type,
-        duration:duration,
-        createdAt:now
-      };
-
-      await db.ref("approvedStudents/"+code).set(payload);
-      created.push(code);
-      generatedList.value += code + "\n";
-    }
-
-    showGenStatus(`تم إنشاء ${created.length} كود`, "success");
-    generateBtn.disabled = false;
-    refreshTable();
-  }
-
-  generateBtn.onclick = generateBatch;
-  refreshBtn.onclick = refreshTable;
-  searchInput.oninput = () => setTimeout(refreshTable,300);
-
-  async function refreshTable(){
-    tableBody.innerHTML = "";
-    listStatus.style.display = "block";
-    listStatus.className = "status pending";
-    listStatus.textContent = "⏳ تحميل الأكواد...";
-
-    const snap = await db.ref("approvedStudents").orderByKey().limitToLast(500).once("value");
-    const data = snap.val() || {};
-
-    const arr = Object.keys(data).reverse().map(k=>({code:k,...data[k]}));
-    const q = (searchInput.value||"").trim();
-    const filtered = arr.filter(x =>
-      !q || x.code.includes(q) || (x.deviceId||"").includes(q)
-    );
-
-    if(!filtered.length){
-      listStatus.className="status error";
-      listStatus.textContent="لا توجد نتائج";
+  db.ref("codes").orderByChild("code").equalTo(code).once("value", (snapshot) => {
+    if (!snapshot.exists()) {
+      status.textContent = "❌ الكود غير صحيح.";
+      status.className = "error";
+      btn.style.display = "flex";
       return;
     }
 
-    listStatus.style.display = "none";
+    const key = Object.keys(snapshot.val())[0];
+    const data = snapshot.val()[key];
 
-    for(const it of filtered){
-      const expiryText = it.expiry ? new Date(it.expiry).toLocaleString("ar-EG") : "--";
-      const state = it.isBlocked ? "محظور" :
-                    it.expiry && it.expiry <= Date.now() ? "منتهي" : "ساري";
+    const now = Date.now();
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><b>${it.code}</b></td>
-        <td>${it.type}</td>
-        <td>${expiryText}</td>
-        <td>${it.deviceId || "-"}</td>
-        <td>${state}</td>
-        <td>
-          <button class="btn unblockBtn" data-code="${it.code}">إعادة ضبط</button>
-          <button class="btn blockBtn" data-code="${it.code}">حظر</button>
-          <button class="btn ghost deleteBtn" data-code="${it.code}">حذف</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
+    // إذا لم يتم التفعيل من قبل ⇦ أنشئ انتهاء صلاحية
+    if (!data.deviceId) {
+      let expireTime;
+
+      if (data.type === "trial") {
+        expireTime = now + data.minutes * 60000;
+      }
+      else if (data.type === "sub") {
+        expireTime = now + data.days * 24 * 60 * 60 * 1000;
+      }
+      else {
+        status.textContent = "⚠ كود غير مضبوط.";
+        status.className = "error";
+        return;
+      }
+
+      db.ref("codes/" + key).update({
+        deviceId: deviceId,
+        expire: expireTime
+      });
+
+      status.textContent = "✅ تم التفعيل لأول مرة!";
+      status.className = "success";
+      // window.location.href = "student.html";
+      return;
     }
 
-    document.querySelectorAll(".unblockBtn").forEach(b=>b.onclick = resetDevice);
-    document.querySelectorAll(".blockBtn").forEach(b=>b.onclick = blockCode);
-    document.querySelectorAll(".deleteBtn").forEach(b=>b.onclick = deleteCode);
-  }
+    // تحقق الجهاز
+    if (data.deviceId !== deviceId) {
+      status.textContent = "⚠ هذا الكود مفعل على جهاز آخر.";
+      status.className = "error";
+      return;
+    }
 
-  async function resetDevice(e){
-    const code = e.target.dataset.code;
-    await db.ref("approvedStudents/"+code+"/deviceId").remove();
-    alert("تم مسح الجهاز");
-    refreshTable();
-  }
+    // تحقق انتهاء الصلاحية
+    if (data.expire <= now) {
+      status.textContent = "⛔ انتهت صلاحية الكود.";
+      status.className = "error";
+      return;
+    }
 
-  async function blockCode(e){
-    const code = e.target.dataset.code;
-    await db.ref("approvedStudents/"+code+"/isBlocked").set(true);
-    alert("تم الحظر");
-    refreshTable();
-  }
-
-  async function deleteCode(e){
-    const code = e.target.dataset.code;
-    await db.ref("approvedStudents/"+code).remove();
-    alert("تم الحذف");
-    refreshTable();
-  }
-
-  refreshTable();
+    // نجاح
+    status.textContent = "✅ تسجيل دخول ناجح!";
+    status.className = "success";
+    // window.location.href = "student.html";
+  });
+}
 </script>
 
 </body>
