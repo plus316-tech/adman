@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -15,29 +14,30 @@
     header{display:flex;gap:18px;align-items:center;justify-content:space-between;margin-bottom:18px}
     h1{font-size:1.2rem}
     .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px}
-    .grid{display:grid;grid-template-columns:1fr 420px;gap:14px}label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
-input,select,button{font-family:'Cairo',sans-serif}
-.form-row{margin-bottom:10px}
-.input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff}
-.small{font-size:0.85rem}
-.btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041426;cursor:pointer;font-weight:700}
-.btn:disabled{opacity:0.6;cursor:not-allowed}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:14px}
+    label{display:block;font-size:0.85rem;margin-bottom:6px;color:var(--muted)}
+    input,select,button{font-family:'Cairo',sans-serif}
+    .form-row{margin-bottom:10px}
+    .input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff}
+    .small{font-size:0.85rem}
+    .btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041426;cursor:pointer;font-weight:700}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .btn:disabled{opacity:0.6;cursor:not-allowed}
 
-/* table */
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right;font-size:0.95rem}
-th{color:var(--muted);font-weight:700}
-.muted{color:var(--muted);font-size:0.85rem}
-.actions button{margin-left:6px}
+    /* table */
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right;font-size:0.95rem}
+    th{color:var(--muted);font-weight:700}
+    .muted{color:var(--muted);font-size:0.85rem}
+    .actions button{margin-left:6px}
 
-.status{margin-top:8px;padding:8px;border-radius:8px}
-.success{background:rgba(0,245,196,0.06);border:1px solid rgba(0,245,196,0.12);color:#00f5c4}
-.error{background:rgba(255,79,79,0.06);border:1px solid rgba(255,79,79,0.12);color:#ff6b6b}
-.pending{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.12);color:#ffb347}
+    .status{margin-top:8px;padding:8px;border-radius:8px}
+    .success{background:rgba(0,245,196,0.06);border:1px solid rgba(0,245,196,0.12);color:#00f5c4}
+    .error{background:rgba(255,79,79,0.06);border:1px solid rgba(255,79,79,0.12);color:#ff6b6b}
+    .pending{background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.12);color:#ffb347}
 
-/* responsive */
-@media (max-width:980px){.grid{grid-template-columns:1fr} .wrap{padding:8px}}
-
+    /* responsive */
+    @media (max-width:980px){.grid{grid-template-columns:1fr} .wrap{padding:8px}}
   </style>
 </head>
 <body>
@@ -45,81 +45,88 @@ th{color:var(--muted);font-weight:700}
     <header>
       <h1>لوحة تحكم -- إدارة أكواد التفعيل (6 أرقام)</h1>
       <div class="muted">مبني لهيكلتك: <code>approvedStudents/{code}</code></div>
-    </header><div class="grid">
-  <!-- يمين: لوحة توليد الأكواد -->
-  <div class="card">
-    <h3>توليد أكواد جديدة</h3>
-    <div class="form-row">
-      <label>نوع الكود</label>
-      <select id="codeType" class="input small">
-        <option value="trial">تجربة (بالدقايق)</option>
-        <option value="subscription">اشتراك (بالأيام)</option>
-      </select>
+    </header>
+
+    <div class="grid">
+      <!-- يمين: لوحة توليد الأكواد -->
+      <div class="card">
+        <h3>توليد أكواد جديدة</h3>
+        <div class="form-row">
+          <label>نوع الكود</label>
+          <select id="codeType" class="input small">
+            <option value="trial">تجربة (بالدقايق)</option>
+            <option value="subscription">اشتراك (بالأيام)</option>
+          </select>
+        </div>
+
+        <div class="form-row" id="durationRow">
+          <label id="durationLabel">المدة (دقايق للتجربة / أيام للاشتراك)</label>
+          <input id="durationInput" class="input" type="number" min="1" value="30">
+        </div>
+
+        <div class="form-row">
+          <label>عدد الأكواد</label>
+          <input id="countInput" class="input" type="number" min="1" max="500" value="10">
+        </div>
+
+        <div class="form-row">
+          <label>بادئة اختيارية (مثال: 9 أو اتركها فارغة، أقصى طول 2)</label>
+          <input id="prefixInput" class="input" type="text" maxlength="2" placeholder="مثال: 9">
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="generateBtn" class="btn">توليد أكواد</button>
+          <button id="downloadBtn" class="btn ghost">تنزيل CSV</button>
+        </div>
+
+        <div id="genStatus" class="status muted" style="display:none"></div>
+
+        <div style="margin-top:12px">
+          <label class="muted">الأكواد المتولدة حديثًا</label>
+          <textarea id="generatedList" rows="6" style="width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- يسار: قائمة الأكواد الموجودة -->
+      <div class="card">
+        <h3>قائمة الأكواد</h3>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input id="searchInput" class="input" placeholder="ابحث برقم الكود أو النوع أو الحالة" />
+          <button id="refreshBtn" class="btn">تحديث</button>
+        </div>
+
+        <div id="tableWrap" style="max-height:520px;overflow:auto">
+          <table id="codesTable">
+            <thead>
+              <tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="listStatus" class="status muted" style="display:none"></div>
+      </div>
     </div>
 
-    <div class="form-row" id="durationRow">
-      <label id="durationLabel">المدة (دقايق للتجربة / أيام للاشتراك)</label>
-      <input id="durationInput" class="input" type="number" min="1" value="30">
-    </div>
-
-    <div class="form-row">
-      <label>عدد الأكواد</label>
-      <input id="countInput" class="input" type="number" min="1" max="500" value="10">
-    </div>
-
-    <div class="form-row">
-      <label>بادئة اختيارية (مثال: 9 أو اتركها فارغة)</label>
-      <input id="prefixInput" class="input" type="text" maxlength="2" placeholder="مثال: 9">
-    </div>
-
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="generateBtn" class="btn">توليد أكواد</button>
-      <button id="downloadBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)">تنزيل CSV</button>
-    </div>
-
-    <div id="genStatus" class="status muted" style="display:none"></div>
-
-    <div style="margin-top:12px">
-      <label class="muted">الأكواد المتولدة حديثًا</label>
-      <textarea id="generatedList" rows="6" style="width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:#fff"></textarea>
+    <div style="height:12px"></div>
+    <div class="muted">ملاحظة: التطبيق يستخدم المسار <code>approvedStudents/{code}</code>. الحقول التي نضعها لكل كود:
+      <ul>
+        <li><code>expiry</code> -- timestamp (Number)</li>
+        <li><code>isBlocked</code> -- Boolean</li>
+        <li><code>deviceId</code> -- String أو غير موجود</li>
+        <li><code>type</code> -- "trial" أو "subscription"</li>
+        <li><code>duration</code> -- القيمة بالأرقام (دقايق إن كان trial، أيام إن كان subscription)</li>
+        <li><code>createdAt</code> -- timestamp</li>
+      </ul>
     </div>
   </div>
 
-  <!-- يسار: قائمة الأكواد الموجودة -->
-  <div class="card">
-    <h3>قائمة الأكواد</h3>
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-      <input id="searchInput" class="input" placeholder="ابحث برقم الكود أو الحالة" />
-      <button id="refreshBtn" class="btn">تحديث</button>
-    </div>
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <div id="tableWrap" style="max-height:520px;overflow:auto">
-      <table id="codesTable">
-        <thead>
-          <tr><th>الكود</th><th>النوع</th><th>الصلاحية</th><th>جهاز</th><th>الحالة</th><th>تحكم</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div id="listStatus" class="status muted" style="display:none"></div>
-  </div>
-</div>
-
-<div style="height:12px"></div>
-<div class="muted">ملاحظة: التطبيق يستخدم المسار <code>approvedStudents/{code}</code>. الحقول التي نضعها لكل كود:
-  <ul>
-    <li><code>expiry</code> -- timestamp (Number)</li>
-    <li><code>isBlocked</code> -- Boolean</li>
-    <li><code>deviceId</code> -- String أو غير موجود</li>
-    <li><code>type</code> -- "trial" أو "subscription"</li>
-    <li><code>duration</code> -- القيمة بالأرقام (دقايق إن كان trial، أيام إن كان subscription)</li>
-    <li><code>createdAt</code> -- timestamp</li>
-  </ul>
-</div>
-
-  </div>  <!-- Firebase compat -->  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>  <script>
-    // --- ضع إعدادات Firebase الخاصة بك هنا (أو اتركها كما لديك في صفحة التفعيل) ---
+  <script>
+    // --- ضع إعدادات Firebase الخاصة بك هنا ---
     const firebaseConfig = {
       apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
       authDomain: "website-83e14.firebaseapp.com",
@@ -136,7 +143,7 @@ th{color:var(--muted);font-weight:700}
     }
     const db = firebase.database();
 
-    // عناصر DOM
+    // DOM
     const codeType = document.getElementById('codeType');
     const durationInput = document.getElementById('durationInput');
     const durationLabel = document.getElementById('durationLabel');
@@ -152,8 +159,7 @@ th{color:var(--muted);font-weight:700}
     const listStatus = document.getElementById('listStatus');
     const searchInput = document.getElementById('searchInput');
 
-    // تكوين
-    const DIGITS = 6; // 6 أرقام كما طلبت
+    const DIGITS = 6; // طول الجزء الرقمي دائماً 6
 
     codeType.addEventListener('change', () => {
       if (codeType.value === 'trial') {
@@ -165,50 +171,61 @@ th{color:var(--muted);font-weight:700}
       }
     });
 
-    // مولد كود رقمى مكون من 6 أرقام. يمكن إضافة بادئة قصيرة.
-    function generateNumericCode(prefix = ''){
-      // نتأكد أن الناتج طول DIGITS
+    // يُرجع رقمًا رقميًا بطول DIGITS (مثال: 000123) ثم نضيف البادئة (إن وُجدت)
+    function generateNumericCode(prefix = '') {
+      const min = 0;
       const max = Math.pow(10, DIGITS) - 1;
-      const min = Math.pow(10, DIGITS - 1);
       const num = Math.floor(Math.random() * (max - min + 1)) + min;
-      return prefix + String(num);
+      // pad left بالـ 0 لضمان الطول
+      const padded = String(num).padStart(DIGITS, '0');
+      return prefix + padded;
     }
 
-    // تحقق من التكرار في قاعدة البيانات
-    async function isCodeExists(code){
-      const snap = await db.ref('approvedStudents/' + code).once('value');
+    // تحقق من التكرار في قاعدة البيانات (على المفتاح الكامل)
+    async function isCodeExists(fullCode) {
+      const snap = await db.ref('approvedStudents/' + fullCode).once('value');
       return snap.exists();
     }
 
+    // حالة العرض
+    function showGenStatus(text, klass='muted') {
+      genStatus.style.display = 'block';
+      genStatus.className = 'status ' + klass;
+      genStatus.textContent = text;
+    }
+
     // توليد دفعة من الأكواد
-    async function generateBatch(){
+    async function generateBatch() {
       const type = codeType.value;
       const duration = Number(durationInput.value) || 1;
       const count = Math.min(500, Math.max(1, Number(countInput.value) || 1));
-      const prefix = (prefixInput.value || '').toString();
+      let prefix = (prefixInput.value || '').toString().trim();
+      if (prefix.length > 2) prefix = prefix.substring(0,2);
 
       generatedList.value = '';
-      genStatus.style.display = 'block';
-      genStatus.className = 'status pending';
-      genStatus.textContent = '⏳ جاري توليد الأكواد... (التحقق من التكرار في قاعدة البيانات)';
+      showGenStatus('⏳ جاري توليد الأكواد... (التحقق من التكرار في قاعدة البيانات)', 'pending');
       generateBtn.disabled = true;
 
       const created = [];
       const errors = [];
 
-      for (let i = 0; i < count; i++){
+      for (let i = 0; i < count; i++) {
         let attempts = 0;
         let code = '';
-        while (attempts < 8){ // محاولات قليلة للتفادى
+        // ننشئ كود فريد (محاولات محدودة)
+        while (attempts < 12) {
           code = generateNumericCode(prefix);
           if (!(await isCodeExists(code))) break;
           attempts++;
         }
-        if (attempts >= 8){ errors.push(code); continue; }
+        if (attempts >= 12) {
+          errors.push(code || '(failed)');
+          continue;
+        }
 
         const now = Date.now();
         let expiry = now;
-        if (type === 'trial'){
+        if (type === 'trial') {
           expiry = now + (duration * 60 * 1000); // دقائق -> ms
         } else {
           expiry = now + (duration * 24 * 60 * 60 * 1000); // أيام -> ms
@@ -227,43 +244,64 @@ th{color:var(--muted);font-weight:700}
           await db.ref('approvedStudents/' + code).set(payload);
           created.push({code, ...payload});
           generatedList.value += code + '\n';
-        } catch (err){
+        } catch (err) {
           console.error('create error', err);
           errors.push(code);
         }
       }
 
-      genStatus.className = 'status success';
-      genStatus.textContent = ✅ تم توليد ${created.length} كود. فشل: ${errors.length};
+      showGenStatus(`✅ تم توليد ${created.length} كود. فشل: ${errors.length}`, 'success');
       generateBtn.disabled = false;
+
       // حفظ نتائج للتحميل
-      generateBtn.dataset.last = JSON.stringify(created);
+      generateBtn.dataset.last = JSON.stringify(created || []);
       refreshTable();
     }
 
     generateBtn.addEventListener('click', generateBatch);
 
+    // هروب CSV
+    function csvEscape(val) {
+      if (val === null || val === undefined) return '""';
+      const s = String(val);
+      // استبدال " بـ ""
+      const escaped = s.replace(/"/g, '""');
+      return `"${escaped}"`;
+    }
+
     // تحميل CSV
     downloadBtn.addEventListener('click', () => {
       const data = generateBtn.dataset.last;
       if (!data) return alert('لا توجد أكواد متولدة حديثًا');
-      const arr = JSON.parse(data);
+      let arr = [];
+      try { arr = JSON.parse(data); } catch { arr = []; }
+      if (!arr.length) return alert('لا توجد أكواد متولدة حديثًا');
+
       const header = ['code','type','duration','expiry','deviceId','isBlocked','createdAt'];
-      const rows = arr.map(r => [r.code,r.type,r.duration,r.expiry,r.deviceId || '',r.isBlocked,r.createdAt]);
-      const csv = [header.join(','), ...rows.map(r=>r.map(x=>"${x}").join(','))].join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
+      const rows = arr.map(r => [
+        csvEscape(r.code),
+        csvEscape(r.type),
+        csvEscape(r.duration),
+        csvEscape(r.expiry),
+        csvEscape(r.deviceId || ''),
+        csvEscape(r.isBlocked),
+        csvEscape(r.createdAt)
+      ]);
+      const csv = [header.map(h => csvEscape(h)).join(','), ...rows.map(r => r.join(','))].join('\n');
+
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'codes.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
 
-    // تحميل وعرض قائمة الأكواد (محددة بعدد لعرض أولي)
-    async function refreshTable(){
+    // تحميل وعرض قائمة الأكواد
+    async function refreshTable() {
       tableBody.innerHTML = '';
       listStatus.style.display = 'block';
       listStatus.className = 'status pending';
       listStatus.textContent = '⏳ جاري جلب أكواد من قاعدة البيانات...';
 
-      try{
+      try {
         const snap = await db.ref('approvedStudents').orderByKey().limitToLast(500).once('value');
         const data = snap.val() || {};
         const arr = Object.keys(data).reverse().map(k => ({code:k, ...data[k]}));
@@ -272,10 +310,10 @@ th{color:var(--muted);font-weight:700}
         const q = (searchInput.value || '').trim();
         const filtered = arr.filter(item => {
           if (!q) return true;
-          return item.code.includes(q) || (item.type && item.type.includes(q)) || (String(item.isBlocked) === q);
+          return item.code.includes(q) || (item.type && item.type.includes(q)) || (String(item.isBlocked) === q) || (String(item.deviceId || '').includes(q));
         });
 
-        if (!filtered.length){
+        if (!filtered.length) {
           listStatus.className = 'status error';
           listStatus.textContent = 'لا توجد أكواد للعرض.';
           return;
@@ -283,7 +321,7 @@ th{color:var(--muted);font-weight:700}
 
         listStatus.style.display = 'none';
 
-        for (const it of filtered){
+        for (const it of filtered) {
           const tr = document.createElement('tr');
 
           const expiryText = it.expiry ? (new Date(it.expiry)).toLocaleString('ar-EG') : '--';
@@ -299,7 +337,7 @@ th{color:var(--muted);font-weight:700}
               <button data-code="${it.code}" class="btn unblockBtn">إعادة ضبط الجهاز</button>
               <button data-code="${it.code}" class="btn blockBtn">حظر</button>
               <button data-code="${it.code}" class="btn extendBtn">تمديد</button>
-              <button data-code="${it.code}" class="btn deleteBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)">حذف</button>
+              <button data-code="${it.code}" class="btn ghost deleteBtn">حذف</button>
             </td>
           `;
 
@@ -312,7 +350,7 @@ th{color:var(--muted);font-weight:700}
         document.querySelectorAll('.extendBtn').forEach(b=>b.addEventListener('click', extendCode));
         document.querySelectorAll('.deleteBtn').forEach(b=>b.addEventListener('click', deleteCode));
 
-      } catch(err){
+      } catch (err) {
         console.error('refresh error', err);
         listStatus.className = 'status error';
         listStatus.textContent = '❌ فشل جلب البيانات من الخادم.';
@@ -323,29 +361,29 @@ th{color:var(--muted);font-weight:700}
     searchInput.addEventListener('input', () => { setTimeout(refreshTable, 400); });
 
     // إعادة ضبط الجهاز: مسح deviceId
-    async function resetDevice(e){
+    async function resetDevice(e) {
       const code = e.currentTarget.dataset.code;
       if (!confirm('هل تريد مسح الجهاز المرتبط بهذا الكود؟')) return;
-      try{
+      try {
         await db.ref('approvedStudents/' + code + '/deviceId').remove();
         alert('✅ تم مسح deviceId');
         refreshTable();
-      }catch(err){console.error(err);alert('فشل العملية')}
+      } catch (err) { console.error(err); alert('فشل العملية') }
     }
 
     // حظر كود
-    async function blockCode(e){
+    async function blockCode(e) {
       const code = e.currentTarget.dataset.code;
       if (!confirm('هل تريد حظر هذا الكود؟')) return;
-      try{
+      try {
         await db.ref('approvedStudents/' + code + '/isBlocked').set(true);
         alert('✅ تم حظر الكود');
         refreshTable();
-      }catch(err){console.error(err);alert('فشل العملية')}
+      } catch (err) { console.error(err); alert('فشل العملية') }
     }
 
     // تمديد الصلاحية (يطلب قيمة)
-    async function extendCode(e){
+    async function extendCode(e) {
       const code = e.currentTarget.dataset.code;
       const add = prompt('أدخل رقم المدة الإضافية (بالدقايق لو trial أو بالأيام لو subscription):');
       if (!add) return;
@@ -354,7 +392,7 @@ th{color:var(--muted);font-weight:700}
       if (!data) return alert('الكود غير موجود');
       const now = Date.now();
       let newExpiry = data.expiry || now;
-      if (data.type === 'trial'){
+      if (data.type === 'trial') {
         newExpiry = Math.max(newExpiry, now) + (Number(add) * 60 * 1000);
       } else {
         newExpiry = Math.max(newExpiry, now) + (Number(add) * 24 * 60 * 60 * 1000);
@@ -365,17 +403,18 @@ th{color:var(--muted);font-weight:700}
     }
 
     // حذف كود
-    async function deleteCode(e){
+    async function deleteCode(e) {
       const code = e.currentTarget.dataset.code;
       if (!confirm('هل أنت متأكد من حذف هذا الكود نهائيًا؟')) return;
-      try{
+      try {
         await db.ref('approvedStudents/' + code).remove();
         alert('✅ تم الحذف');
         refreshTable();
-      }catch(err){console.error(err);alert('فشل الحذف')}
+      } catch (err) { console.error(err); alert('فشل الحذف') }
     }
 
     // جلب أولي
     refreshTable();
-  </script></body>
+  </script>
+</body>
 </html>
