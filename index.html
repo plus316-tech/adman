@@ -1,183 +1,434 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة تحكم الأكواد</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin Dashboard — لوحة تحكم الأكواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;}
-body{background:#0f0f12;color:white;padding:20px;}
-.card{
-    background:#1b1b1f;padding:20px;margin-bottom:20px;border-radius:12px;
-    box-shadow:0 0 20px rgba(0,0,0,0.4);
-}
-input,select{
-    width:100%;padding:12px;margin:7px 0;border-radius:8px;
-    border:none;background:#2a2a30;color:white;font-size:16px;
-}
-button{
-    width:100%;padding:14px;background:#4e00ff;border:none;border-radius:10px;
-    color:white;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px;
-}
-table{
-    width:100%;border-collapse:collapse;margin-top:20px;
-}
-th,td{
-    padding:12px;border-bottom:1px solid #333;text-align:center;
-}
-.action-btn{
-    padding:6px 10px;border:none;border-radius:6px;color:white;cursor:pointer;
-}
-.del{background:#e6004c;}
-.copy{background:#0077ff;}
+  :root{--bg:#0f0f12;--card:#141418;--accent:#4e00ff;--danger:#ff3b3b;--ok:#00e1a6}
+  *{box-sizing:border-box;font-family:'Cairo',sans-serif}
+  body{margin:0;background:linear-gradient(180deg,#07070a,var(--bg));color:#fff;padding:20px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  h1{margin:0;font-size:20px}
+  .small{opacity:0.8;font-size:13px}
+  .wrap{max-width:1100px;margin:18px auto}
+  .card{background:var(--card);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.03)}
+  label{display:block;margin-top:8px;margin-bottom:6px;font-weight:600}
+  input,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);color:#fff}
+  button{background:var(--accent);border:none;color:#001;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .row-2{grid-template-columns:repeat(2,1fr)}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:center}
+  th{background:rgba(255,255,255,0.02);font-weight:700}
+  .btn-sm{padding:6px 8px;border-radius:8px;border:none;cursor:pointer}
+  .btn-del{background:var(--danger);color:#fff}
+  .btn-copy{background:#1f8bff;color:#fff}
+  .btn-block{background:#ff8b00;color:#fff}
+  .btn-unblock{background:#00b894;color:#fff}
+  .hidden{display:none}
+  .stats{display:flex;gap:10px}
+  .stat{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;text-align:center;min-width:120px}
+  .right{display:flex;gap:8px;align-items:center}
+  @media(max-width:900px){.row{grid-template-columns:1fr}.stats{flex-direction:column}}
 </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>لوحة تحكم الأدمن — الأكواد</h1>
+        <div class="small">توليد، إدارة، حظر أجهزة، رفع حظر، تصدير</div>
+      </div>
+      <div class="right">
+        <div id="adminUidDisplay" class="small">جارٍ المصادقة...</div>
+        <button id="logoutBtn" class="hidden">تسجيل خروج</button>
+      </div>
+    </header>
 
-<h1 style="text-align:center;margin-bottom:20px;">📌 لوحة تحكم الأكواد</h1>
+    <!-- رسالة عدم صلاحية -->
+    <div id="forbidden" class="card hidden" style="color:var(--danger);text-align:center;font-weight:700">
+      ❌ غير مسموح بدخول لوحة التحكم — uid المستخدم ليس أدمن
+    </div>
 
-<!-- توليد الأكواد -->
-<div class="card">
-    <h2>⚡ توليد أكواد تلقائياً</h2>
+    <!-- admin area -->
+    <div id="adminArea" class="hidden">
+      <div class="card">
+        <div class="stats">
+          <div class="stat">
+            <div class="small">إجمالي الأكواد</div>
+            <div id="statTotal">-</div>
+          </div>
+          <div class="stat">
+            <div class="small">أكواد فعالة</div>
+            <div id="statActive">-</div>
+          </div>
+          <div class="stat">
+            <div class="small">أكواد منتهية</div>
+            <div id="statExpired">-</div>
+          </div>
+          <div class="stat">
+            <div class="small">أجهزة محظورة</div>
+            <div id="statBlocked">-</div>
+          </div>
+        </div>
+      </div>
 
-    <label>عدد الأكواد</label>
-    <input id="autoCount" type="number" placeholder="مثال: 20">
+      <!-- توليد أكواد -->
+      <div class="card">
+        <h3>⚡ توليد أكواد</h3>
+        <div class="row">
+          <div>
+            <label>عدد الأكواد</label>
+            <input id="autoCount" type="number" placeholder="مثال: 20">
+          </div>
+          <div>
+            <label>نوع المدة</label>
+            <select id="autoDurationType">
+              <option value="minutes">بالدقائق</option>
+              <option value="hours">بالساعات</option>
+              <option value="days">بالالأيام</option>
+            </select>
+          </div>
+          <div>
+            <label>قيمة المدة</label>
+            <input id="autoDurationValue" type="number" placeholder="مثال: 60">
+          </div>
+        </div>
 
-    <label>مدة الصلاحية</label>
-    <select id="autoDurationType">
-        <option value="minutes">بالدقائق</option>
-        <option value="hours">بالساعات</option>
-        <option value="days">بالأيام</option>
-    </select>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button id="genBtn">⚡ توليد تلقائي</button>
+          <button id="genSingleBtn" style="background:#00b894">➕ توليد واحد</button>
+          <button id="exportBtn" style="background:#1f8bff">⬇ تصدير CSV</button>
+        </div>
+      </div>
 
-    <label>قيمة المدة</label>
-    <input id="autoDurationValue" type="number" placeholder="مثال: 60">
+      <!-- أكواد -->
+      <div class="card">
+        <h3>📋 قائمة الأكواد</h3>
+        <div style="margin-bottom:8px">
+          <label>بحث (كود أو حالة)</label>
+          <input id="searchInput" placeholder="اكتب للبحث...">
+        </div>
 
-    <button onclick="generateAutoCodes()">✔ توليد الأكواد</button>
-</div>
+        <table>
+          <thead>
+            <tr><th>الكود</th><th>انتهاء</th><th>الحالة</th><th>جهاز</th><th>إنشاء</th><th>نسخ</th><th>حظر جهاز</th><th>حذف</th></tr>
+          </thead>
+          <tbody id="codesTable"></tbody>
+        </table>
+      </div>
 
-<!-- جدول الأكواد -->
-<div class="card">
-    <h2>📋 الأكواد الحالية</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>الكود</th>
-                <th>تاريخ الانتهاء</th>
-                <th>نسخ</th>
-                <th>حذف</th>
-            </tr>
-        </thead>
-        <tbody id="codesTable"></tbody>
-    </table>
-</div>
+      <!-- blocked devices -->
+      <div class="card">
+        <h3>🚫 الأجهزة المحظورة</h3>
+        <table>
+          <thead><tr><th>Device ID / Fingerprint</th><th>تقرير من</th><th>تاريخ الحظر</th><th>رفع الحظر</th></tr></thead>
+          <tbody id="blockedTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-<!-- Firebase (COMPAT — don't change) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <!-- Firebase compat (use v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-<script>
-// -----------------------
-//  Firebase Config
-// -----------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
-  authDomain: "website-83e14.firebaseapp.com",
-  databaseURL: "https://website-83e14-default-rtdb.firebaseio.com",
-  projectId: "website-83e14",
-  storageBucket: "website-83e14.firebasestorage.app",
-  messagingSenderId: "994953388464",
-  appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
-  measurementId: "G-7PN256M5PG"
-};
+  <script>
+  /******* CONFIG - عدّل القيم هنا *******/
+  const firebaseConfig = {
+    apiKey: "YOUR-API-KEY",
+    authDomain: "YOUR-PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR-PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR-PROJECT-ID",
+    storageBucket: "YOUR-PROJECT.appspot.com",
+    messagingSenderId: "ID",
+    appId: "APP-ID"
+  };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  // ضع UID الأدمن هنا (مثال: "h7EASoeIiYSRLi4l89LWiKjbzMQ2")
+  const ADMIN_UID = "ضع-هنا-UID-الادمن";
 
+  /******* INIT *******/
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-// ------------------------
-//   توليد كود عشوائي
-// ------------------------
-function generateCode() {
+  // UI refs
+  const adminArea = document.getElementById('adminArea');
+  const forbidden = document.getElementById('forbidden');
+  const adminUidDisplay = document.getElementById('adminUidDisplay');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const statTotal = document.getElementById('statTotal');
+  const statActive = document.getElementById('statActive');
+  const statExpired = document.getElementById('statExpired');
+  const statBlocked = document.getElementById('statBlocked');
+
+  const genBtn = document.getElementById('genBtn');
+  const genSingleBtn = document.getElementById('genSingleBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const codesTable = document.getElementById('codesTable');
+  const blockedTable = document.getElementById('blockedTable');
+  const searchInput = document.getElementById('searchInput');
+
+  // auth
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      auth.signInAnonymously().catch(e => {
+        console.error('anon sign-in failed', e);
+        adminUidDisplay.textContent = 'خطأ في المصادقة';
+      });
+      return;
+    }
+    adminUidDisplay.textContent = 'uid: ' + user.uid;
+    logoutBtn.classList.remove('hidden');
+    logoutBtn.onclick = () => {
+      auth.signOut().then(()=> location.reload());
+    };
+
+    if (user.uid === ADMIN_UID) {
+      forbidden.classList.add('hidden');
+      adminArea.classList.remove('hidden');
+      // load data
+      loadCodesRealtime();
+      loadBlockedRealtime();
+    } else {
+      // not admin
+      adminArea.classList.add('hidden');
+      forbidden.classList.remove('hidden');
+    }
+  });
+
+  /********** Util: generate code **********/
+  function generateCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let c = "";
-    for (let i = 0; i < 6; i++)
-        c += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)];
     return c;
-}
+  }
 
-// ------------------------
-//   توليد أكواد تلقائي
-// ------------------------
-function generateAutoCodes() {
-    const count = parseInt(document.getElementById("autoCount").value);
-    const type = document.getElementById("autoDurationType").value;
-    const val = parseInt(document.getElementById("autoDurationValue").value);
+  /********** Generate Auto Codes **********/
+  genBtn.addEventListener('click', () => generateAutoCodes());
+  genSingleBtn.addEventListener('click', () => generateSingleCode());
 
-    if (!count || count <= 0) return alert("❌ اكتب عدد الأكواد");
-    if (!val) return alert("❌ اكتب المدة");
+  function generateSingleCode() {
+    if (!isAdmin()) return alert('غير مسموح');
+    const type = document.getElementById('autoDurationType').value;
+    const val = parseInt(document.getElementById('autoDurationValue').value);
+    if (!val || isNaN(val)) return alert('اكتب قيمة المدة');
+    const code = generateCode();
+    const expiresAt = calcExpiry(type, val);
+    db.ref('approvedCodes/' + code).set({
+      expiresAt,
+      createdAt: Date.now(),
+      active: true,
+      usedBy: '',
+      deviceId: ''
+    }).then(()=> alert('تم إنشاء كود: ' + code));
+  }
 
-    for (let i = 0; i < count; i++) {
-        let code = generateCode();
+  function generateAutoCodes() {
+    if (!isAdmin()) return alert('غير مسموح');
+    const count = parseInt(document.getElementById('autoCount').value);
+    const type = document.getElementById('autoDurationType').value;
+    const val = parseInt(document.getElementById('autoDurationValue').value);
+    if (!count || count <= 0) return alert('اكتب عدد صحيح');
+    if (!val || isNaN(val)) return alert('اكتب قيمة المدة');
 
-        let expires = Date.now();
-        if (type === "minutes") expires += val * 60000;
-        if (type === "hours")   expires += val * 3600000;
-        if (type === "days")    expires += val * 86400000;
-
-        db.ref("approvedCodes/" + code).set({
-            expiresAt: expires,
-            usedBy: "",
-            deviceId: "",
-            active: true,
-            createdAt: Date.now()
-        });
+    const updates = {};
+    for (let i=0;i<count;i++){
+      const code = generateCode();
+      updates['approvedCodes/' + code] = {
+        expiresAt: calcExpiry(type, val),
+        createdAt: Date.now(),
+        active: true,
+        usedBy: '',
+        deviceId: ''
+      };
     }
-
-    alert("✔ تم توليد " + count + " كود بنجاح");
-}
-
-// ------------------------
-//     تحميل الأكواد
-// ------------------------
-function loadCodes() {
-    const table = document.getElementById("codesTable");
-    db.ref("approvedCodes").on("value", snap => {
-        table.innerHTML = "";
-        snap.forEach(codeSnap => {
-            const code = codeSnap.key;
-            const data = codeSnap.val();
-            const endDate = new Date(data.expiresAt).toLocaleString();
-
-            table.innerHTML += `
-                <tr>
-                    <td>${code}</td>
-                    <td>${endDate}</td>
-                    <td><button class="action-btn copy" onclick="copyCode('${code}')">📋</button></td>
-                    <td><button class="action-btn del" onclick="deleteCode('${code}')">🗑</button></td>
-                </tr>
-            `;
-        });
+    // Write in one multi-path update
+    db.ref().update(updates).then(()=> {
+      alert('✔ تم توليد ' + count + ' كود بنجاح');
+    }).catch(e => {
+      console.error('generateAutoCodes failed', e);
+      alert('فشل في توليد الأكواد');
     });
-}
+  }
 
-// نسخ الكود
-function copyCode(code) {
-    navigator.clipboard.writeText(code);
-    alert("✔ تم نسخ الكود: " + code);
-}
+  function calcExpiry(type, val){
+    const now = Date.now();
+    if (type === 'minutes') return now + val * 60 * 1000;
+    if (type === 'hours') return now + val * 60 * 60 * 1000;
+    if (type === 'days') return now + val * 24 * 60 * 60 * 1000;
+    return now + val * 60 * 1000;
+  }
 
-// حذف كود
-function deleteCode(code) {
-    if (confirm("هل تريد حذف الكود؟")) {
-        db.ref("approvedCodes/" + code).remove();
+  function isAdmin(){
+    const u = auth.currentUser;
+    return u && u.uid === ADMIN_UID;
+  }
+
+  /********** Load Codes Realtime + search + stats **********/
+  let latestCodes = {}; // cache
+  function loadCodesRealtime(){
+    const ref = db.ref('approvedCodes');
+    ref.on('value', snap => {
+      const data = snap.val() || {};
+      latestCodes = data;
+      renderCodesTable(data);
+      updateStats();
+    });
+  }
+
+  function renderCodesTable(data){
+    const q = (searchInput.value || '').trim().toLowerCase();
+    codesTable.innerHTML = '';
+    const rows = Object.keys(data).sort();
+    for (const code of rows){
+      const d = data[code];
+      const expiresAt = d.expiresAt || 0;
+      const active = d.active && (expiresAt > Date.now());
+      const stateText = active ? 'نشط' : 'منتهي';
+      const createdAt = d.createdAt ? new Date(d.createdAt).toLocaleString() : '-';
+      const deviceId = d.deviceId || '';
+      // search filter
+      if (q){
+        if (!(code.toLowerCase().includes(q) || stateText.includes(q) || (deviceId && deviceId.toLowerCase().includes(q)))) continue;
+      }
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${code}</td>
+        <td>${expiresAt ? new Date(expiresAt).toLocaleString() : '-'}</td>
+        <td>${stateText}</td>
+        <td>${deviceId || '-'}</td>
+        <td>${createdAt}</td>
+        <td><button class="btn-sm btn-copy action-btn copy" data-code="${code}">نسخ</button></td>
+        <td><button class="btn-sm btn-block action-btn" data-device="${deviceId}" data-code="${code}">${deviceId ? 'حظر' : 'حظر (يدوي)'}</button></td>
+        <td><button class="btn-sm btn-del action-btn" data-code="${code}">حذف</button></td>
+      `;
+      codesTable.appendChild(row);
     }
-}
+    // attach handlers
+    document.querySelectorAll('.btn-copy').forEach(btn => btn.onclick = e => {
+      const c = e.currentTarget.dataset.code; navigator.clipboard.writeText(c);
+      alert('تم نسخ: ' + c);
+    });
+    document.querySelectorAll('.btn-del').forEach(btn => btn.onclick = async e => {
+      if (!isAdmin()) return alert('غير مسموح');
+      const c = e.currentTarget.dataset.code;
+      if (!confirm('هل تريد حذف الكود ' + c + ' ؟')) return;
+      try { await db.ref('approvedCodes/' + c).remove(); alert('تم الحذف'); } catch(err){ console.error(err); alert('فشل الحذف'); }
+    });
+    document.querySelectorAll('.btn-block').forEach(btn => btn.onclick = e => {
+      if (!isAdmin()) return alert('غير مسموح');
+      const deviceId = e.currentTarget.dataset.device;
+      const code = e.currentTarget.dataset.code;
+      // if code has device, block it; otherwise prompt admin to enter device id
+      if (deviceId){
+        blockDevice(deviceId, 'blocked-by-admin', code);
+      } else {
+        const manual = prompt('ادخل Device ID أو fingerprint للحظر (مثال: DID-...)');
+        if (manual) blockDevice(manual, 'blocked-by-admin-manual', code);
+      }
+    });
+  }
 
-loadCodes();
-</script>
+  searchInput.addEventListener('input', () => renderCodesTable(latestCodes));
 
+  function updateStats(){
+    const now = Date.now();
+    const codes = Object.keys(latestCodes || {});
+    const total = codes.length;
+    let active = 0, expired = 0;
+    codes.forEach(c => {
+      const e = latestCodes[c].expiresAt || 0;
+      if (e > now && latestCodes[c].active) active++; else expired++;
+    });
+    statTotal.textContent = total;
+    statActive.textContent = active;
+    statExpired.textContent = expired;
+    // blocked count will be updated by blocked listener
+  }
+
+  /********** Block device / blockedDevices list **********/
+  function blockDevice(deviceId, reason = 'admin', code='') {
+    if (!isAdmin()) return alert('غير مسموح');
+    if (!deviceId) return alert('لايوجد Device ID');
+    const fp = deviceId;
+    const payload = {
+      uid: auth.currentUser ? auth.currentUser.uid : 'admin',
+      blockedAt: Date.now(),
+      reason,
+      code: code || ''
+    };
+    db.ref('blockedDevices/' + fp).set(payload).then(()=> {
+      alert('تم حظر الجهاز: ' + fp);
+    }).catch(e => {
+      console.error('blockDevice failed', e);
+      alert('فشل في الحظر');
+    });
+  }
+
+  function loadBlockedRealtime(){
+    const ref = db.ref('blockedDevices');
+    ref.on('value', snap => {
+      const data = snap.val() || {};
+      renderBlockedTable(data);
+      statBlocked.textContent = Object.keys(data).length;
+    });
+  }
+
+  function renderBlockedTable(data){
+    blockedTable.innerHTML = '';
+    const keys = Object.keys(data || {});
+    if (!keys.length){
+      blockedTable.innerHTML = '<tr><td colspan="4">لا توجد أجهزة محظورة</td></tr>'; return;
+    }
+    keys.forEach(k => {
+      const d = data[k];
+      const date = d.blockedAt ? new Date(d.blockedAt).toLocaleString() : '-';
+      const reporter = d.uid || '-';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="word-break:break-all">${k}</td>
+        <td>${reporter}</td>
+        <td>${date}</td>
+        <td><button class="btn-sm btn-unblock action-btn" data-fp="${k}">رفع الحظر</button></td>
+      `;
+      blockedTable.appendChild(tr);
+    });
+    document.querySelectorAll('.btn-unblock').forEach(b => b.onclick = async e => {
+      if (!isAdmin()) return alert('غير مسموح');
+      const fp = e.currentTarget.dataset.fp;
+      if (!confirm('رفع الحظر عن: ' + fp + ' ؟')) return;
+      try { await db.ref('blockedDevices/' + fp).remove(); alert('تم رفع الحظر'); } catch(err){ console.error(err); alert('فشل'); }
+    });
+  }
+
+  /********** Export CSV **********/
+  exportBtn.addEventListener('click', exportCSV);
+  function exportCSV(){
+    if (!isAdmin()) return alert('غير مسموح');
+    const rows = [['code','expiresAt','active','deviceId','createdAt']];
+    for (const code of Object.keys(latestCodes || {})){
+      const d = latestCodes[code];
+      rows.push([code, d.expiresAt || '', d.active ? 'true' : 'false', d.deviceId || '', d.createdAt || '']);
+    }
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'codes_export.csv'; a.style.display='none';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  // initial placeholder
+  codesTable.innerHTML = '<tr><td colspan="8">جارٍ التحميل...</td></tr>';
+  blockedTable.innerHTML = '<tr><td colspan="4">جارٍ التحميل...</td></tr>';
+
+  </script>
 </body>
 </html>
