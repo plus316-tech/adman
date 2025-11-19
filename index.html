@@ -1,141 +1,513 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إنشاء الأكواد - لوحة الأدمن</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>لوحة تحكم الادمن — منصة 1383</title>
 
-<style>
-    body {
-        font-family: 'Cairo', sans-serif;
-        background: #f4f6f9;
-        margin: 0;
-        padding: 20px;
-    }
-    .container {
-        max-width: 450px;
-        background: #fff;
-        padding: 25px;
-        margin: auto;
-        border-radius: 12px;
-        border: 1px solid #ddd;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 25px;
-    }
-    label {
-        font-weight: 600;
-        display: block;
-        margin-top: 15px;
-    }
-    input, select, button {
-        width: 100%;
-        padding: 12px;
-        margin-top: 7px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-    }
-    button {
-        background: #007bff;
-        color: white;
-        border: none;
-        margin-top: 25px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    button:hover {
-        background: #0056b3;
-    }
-    .success {
-        margin-top: 20px;
-        padding: 12px;
-        background: #d4edda;
-        color: #155724;
-        border-radius: 8px;
-        display: none;
-        font-weight: 600;
-    }
-</style>
+  <!-- خطوط و أيقونات -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{
+      --bg1:#0f0436; --bg2:#17002b;
+      --card:#0f0720;
+      --accent:#a333ff;
+      --success:#0ff5c4;
+      --danger:#ff6b6b;
+      --muted:rgba(255,255,255,0.6);
+    }
+    *{box-sizing:border-box;font-family:"Cairo",sans-serif}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#fff}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
+    header h1{font-size:1.3rem}
+    header .meta{color:var(--muted);font-size:0.9rem}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:16px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    .controls input, .controls select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;min-width:160px}
+    .controls button{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(90deg,var(--accent),#00f5ff);color:#051226;font-weight:700}
+    .controls .danger{background:linear-gradient(90deg,#ff6b6b,#ff8c6b);color:#fff}
+    .small{font-size:0.85rem;color:var(--muted)}
+
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:0.95rem}
+    th, td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right}
+    th{color:var(--muted);font-weight:700;font-size:0.85rem}
+    tr:hover td{background:linear-gradient(90deg, rgba(163,51,255,0.03), rgba(0,245,255,0.02))}
+    .tag{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700}
+    .tag.good{background:rgba(0,245,196,0.08);color:var(--success)}
+    .tag.bad{background:rgba(255,79,79,0.08);color:var(--danger)}
+    .actions button{margin-left:8px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;background:rgba(255,255,255,0.03);color:var(--muted)}
+    .actions button:hover{background:rgba(255,255,255,0.06);color:#fff}
+
+    .right-col{min-width:260px}
+    .row{display:flex;gap:12px;align-items:center}
+    .flex{display:flex;gap:12px;align-items:center}
+
+    /* responsive */
+    @media (max-width:920px){
+      header{flex-direction:column;align-items:flex-start;gap:8px}
+      .controls{flex-direction:column;align-items:stretch}
+      .row{flex-direction:column;align-items:stretch}
+      .right-col{min-width:100%}
+      th,td{font-size:0.85rem}
+    }
+
+    /* login modal simple */
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:9999}
+    .login-box{width:420px;max-width:94%;padding:20px;border-radius:12px;background:var(--card);border:1px solid rgba(255,255,255,0.04);box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+    .login-box h2{margin-bottom:8px}
+    .input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;margin-bottom:10px}
+    .muted{color:var(--muted);font-size:0.88rem}
+    .footer-note{margin-top:12px;color:var(--muted);font-size:0.82rem;text-align:center}
+
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>لوحة تحكم الادمن — منصة 1383</h1>
+        <div class="meta small">إدارة أكواد التفعيل — approvedStudents</div>
+      </div>
+      <div class="flex">
+        <div id="adminInfo" class="small muted">جارٍ التحقق...</div>
+        <button id="logoutBtn" class="danger" style="display:none">تسجيل خروج</button>
+      </div>
+    </header>
 
-<div class="container">
-    <h2>إنشاء كود جديد</h2>
+    <div class="card">
+      <!-- controls: توليد / إضافة / تصدير / بحث -->
+      <div class="controls">
+        <input id="searchInput" placeholder="ابحث بكود أو حالة أو جهاز..." />
+        <select id="filterSelect">
+          <option value="">كل الأكواد</option>
+          <option value="valid">صالحة</option>
+          <option value="expired">منتهية</option>
+          <option value="blocked">محظورة</option>
+        </select>
 
-    <label>الكود</label>
-    <input type="text" id="code" placeholder="اكتب الكود">
+        <div style="margin-right:auto;display:flex;gap:8px">
+          <button id="genCodeBtn">توليد كود (6 أرقام)</button>
+          <button id="openCreateBtn">إضافة كود يدوي</button>
+          <button id="exportBtn">تصدير CSV</button>
+        </div>
+      </div>
 
-    <label>نوع الكود</label>
-    <select id="codeType">
-        <option value="single">لمرة واحدة</option>
-        <option value="multi">لأكثر من جهاز</option>
-        <option value="open">مفتوح (بدون حد)</option>
-    </select>
+      <!-- جدول النتائج -->
+      <div style="overflow:auto;max-height:520px">
+        <table id="codesTable">
+          <thead>
+            <tr>
+              <th>الكود</th>
+              <th>جهاز مسجل (deviceId)</th>
+              <th>انتهاء الصلاحية</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="codesBody">
+            <!-- سيملأ ديناميكيًا -->
+          </tbody>
+        </table>
+      </div>
 
-    <label>الحد الأقصى للأجهزة</label>
-    <input type="number" id="maxDevices" value="1">
+    </div>
 
-    <label>مدة الصلاحية (بالأيام)</label>
-    <input type="number" id="validDays" value="30">
+    <div style="height:12px"></div>
 
-    <button onclick="createCode()">إنشاء الكود</button>
+    <div class="card">
+      <h3 style="margin:0 0 8px 0">تسجيل التغييرات اليدوية / أدوات سريعة</h3>
 
-    <div id="success" class="success">تم إنشاء الكود بنجاح ✔️</div>
-</div>
+      <div class="row">
+        <div style="flex:1">
+          <label class="small muted">كود (6 أرقام أو نص)</label>
+          <input id="manualCodeInput" class="input" placeholder="ادخل كود جديد أو ضع واحد تم توليده" />
+        </div>
 
+        <div style="width:220px">
+          <label class="small muted">مدة الصلاحية (ساعات)</label>
+          <input id="expiryHours" class="input" type="number" value="720" min="1" />
+        </div>
 
-<script>
+        <div style="width:140px;display:flex;align-items:flex-end;gap:8px">
+          <button id="createManualBtn">إنشاء/تحديث</button>
+        </div>
+      </div>
+
+      <div class="footer-note">ملاحظة: الحذف/الحظر يؤثر فوراً على المستخدمين. كن حذراً.</div>
+    </div>
+
+  </div>
+
+  <!-- login modal -->
+  <div id="loginOverlay" class="overlay" style="display:flex">
+    <div class="login-box card" role="dialog" aria-modal="true">
+      <h2>دخول الادمن</h2>
+      <div class="muted">ادخل كلمة سر الادمن للوصول إلى لوحة التحكم. (هذه طريقة مؤقتة — أنصح باستخدام Firebase Auth لاحقًا)</div>
+      <input id="adminPass" class="input" type="password" placeholder="كلمة سر الادمن"/>
+      <div style="display:flex;gap:8px">
+        <button id="loginBtn">دخول</button>
+        <button id="demoBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06)">تجربة (عرض فقط)</button>
+      </div>
+      <div class="footer-note">لوحة داخلية — لا تشارك كلمة السر. يمكنني تغيير طريقة الدخول لتأمينها.</div>
+    </div>
+  </div>
+
+  <script>
+    /**********************************************
+     * إعداد Firebase — عدّل الأعدادات إلى حسابك
+     **********************************************/
     const firebaseConfig = {
-  apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
-  authDomain: "website-83e14.firebaseapp.com",
-  databaseURL: "https://website-83e14-default-rtdb.firebaseio.com",
-  projectId: "website-83e14",
-  storageBucket: "website-83e14.firebasestorage.app",
-  messagingSenderId: "994953388464",
-  appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
-  measurementId: "G-7PN256M5PG"
-};
+      apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
+      authDomain: "website-83e14.firebaseapp.com",
+      databaseURL: "https://website-83e14-default-rtdb.firebaseio.com",
+      projectId: "website-83e14",
+      storageBucket: "website-83e14.firebasestorage.app",
+      messagingSenderId: "994953388464",
+      appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
+      measurementId: "G-7PN256M5PG"
+    };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    async function createCode() {
-        const code = document.getElementById("code").value.trim();
-        const type = document.getElementById("codeType").value;
-        const maxDevices = parseInt(document.getElementById("maxDevices").value);
-        const days = parseInt(document.getElementById("validDays").value);
-
-        if (!code) {
-            alert("اكتب الكود أولاً");
-            return;
-        }
-
-        const expireDate = new Date();
-        expireDate.setDate(expireDate.getDate() + days);
-
-        await db.collection("activationCodes").doc(code).set({
-            code: code,
-            type: type,
-            maxDevices: type === "open" ? 999999 : maxDevices,
-            usedDevices: 0,
-            createdAt: new Date().toISOString(),
-            expireAt: expireDate.toISOString()
-        });
-
-        document.getElementById("success").style.display = "block";
-        setTimeout(() => {
-            document.getElementById("success").style.display = "none";
-        }, 3000);
+    if (typeof firebase === 'undefined' || !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
-</script>
+    const db = firebase.database();
 
+    /**********************************************
+     * مكونات DOM
+     **********************************************/
+    const loginOverlay = document.getElementById('loginOverlay');
+    const adminPass = document.getElementById('adminPass');
+    const loginBtn = document.getElementById('loginBtn');
+    const demoBtn = document.getElementById('demoBtn');
+    const adminInfo = document.getElementById('adminInfo');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const searchInput = document.getElementById('searchInput');
+    const filterSelect = document.getElementById('filterSelect');
+    const genCodeBtn = document.getElementById('genCodeBtn');
+    const openCreateBtn = document.getElementById('openCreateBtn');
+    const exportBtn = document.getElementById('exportBtn');
+
+    const codesBody = document.getElementById('codesBody');
+
+    const manualCodeInput = document.getElementById('manualCodeInput');
+    const expiryHours = document.getElementById('expiryHours');
+    const createManualBtn = document.getElementById('createManualBtn');
+
+    /**********************************************
+     * إعدادات بسيطة للوحة
+     **********************************************/
+    // كلمة سر الادمن (محلي - غير آمنة إذا وضعت في كود خارجي)
+    const ADMIN_PASSWORD = "admin1383!"; // غيرها فوراً لو هنشر
+    let isAdmin = false; // حالة الدخول
+    let liveData = {}; // تخزين محلي للبيانات المستلمة من Firebase
+
+    /**********************************************
+     * مساعدة: توليد كود 6 أرقام
+     **********************************************/
+    function generate6Digits(){
+      return Math.floor(100000 + Math.random()*900000).toString();
+    }
+
+    /**********************************************
+     * دوال واجهة وعرض رسائل (سريعة)
+     **********************************************/
+    function showToast(msg, type = 'info'){
+      // بسيطة: نعرض رسالة قصيرة في نافذة منبثقة (alert بديل)
+      // هنا نستخدم console + alert صغيرة
+      console.log('TOAST', type, msg);
+      // small non-blocking notification:
+      const n = document.createElement('div');
+      n.textContent = msg;
+      n.style.position = 'fixed';
+      n.style.left = '50%';
+      n.style.transform = 'translateX(-50%)';
+      n.style.bottom = '22px';
+      n.style.background = (type==='error') ? 'rgba(255,79,79,0.95)' : 'rgba(0,245,196,0.95)';
+      n.style.color = '#051226';
+      n.style.padding = '10px 14px';
+      n.style.borderRadius = '8px';
+      n.style.zIndex = 99999;
+      n.style.fontWeight = '700';
+      document.body.appendChild(n);
+      setTimeout(()=> n.remove(), 2600);
+    }
+
+    /**********************************************
+     * تسجيل الدخول الادمن (بسيط)
+     **********************************************/
+    loginBtn.addEventListener('click', () => {
+      const pass = adminPass.value.trim();
+      if (!pass) { showToast('اكتب كلمة السر', 'error'); return; }
+      if (pass === ADMIN_PASSWORD) {
+        isAdmin = true;
+        loginOverlay.style.display = 'none';
+        adminInfo.textContent = 'تم تسجيل الدخول كـ Admin';
+        logoutBtn.style.display = 'inline-block';
+        initAdmin(); // بدء تحميل البيانات
+        showToast('مرحباً أيها الأدمن ✅');
+      } else {
+        showToast('كلمة السر غير صحيحة', 'error');
+      }
+    });
+
+    // تجربة عرض فقط دون صلاحيات حذف/تعديل
+    demoBtn.addEventListener('click', () => {
+      isAdmin = false;
+      loginOverlay.style.display = 'none';
+      adminInfo.textContent = 'وضع عرض فقط (Demo)';
+      logoutBtn.style.display = 'inline-block';
+      initAdmin(true); // فتح بقراءة فقط
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      isAdmin = false;
+      loginOverlay.style.display = 'flex';
+      adminInfo.textContent = 'تم تسجيل الخروج';
+      logoutBtn.style.display = 'none';
+    });
+
+    /**********************************************
+     * استمع لقاعدة البيانات — قراءة كل approvedStudents
+     **********************************************/
+    let dbRef = db.ref('approvedStudents');
+
+    function initAdmin(readOnly = false){
+      // استمع للتغييرات الحية
+      dbRef.on('value', snapshot => {
+        const val = snapshot.val() || {};
+        liveData = val;
+        renderTable(val);
+      }, err => {
+        console.error('firebase read err', err);
+        showToast('فشل تحميل البيانات من Firebase', 'error');
+      });
+    }
+
+    /**********************************************
+     * عرض الجدول + تطبيق فلتر و بحث
+     **********************************************/
+    function formatDateTime(ts){
+      if (!ts) return '—';
+      const d = new Date(Number(ts));
+      return d.toLocaleString('ar-EG');
+    }
+
+    function getStatusFor(item){
+      const now = Date.now();
+      if (!item) return {text:'غير معروف', cls:''};
+      if (item.isBlocked) return {text:'محظور', cls:'bad'};
+      if (item.expiry && item.expiry <= now) return {text:'منتهي', cls:'bad'};
+      return {text:'صالح', cls:'good'};
+    }
+
+    function renderTable(dataObj){
+      // dataObj: { code1: {deviceId, expiry, isBlocked}, code2: ... }
+      const rows = [];
+      const query = (searchInput.value || '').trim();
+      const filter = filterSelect.value;
+
+      for (const key of Object.keys(dataObj).sort()) {
+        const item = dataObj[key];
+        // بحث
+        const matchSearch = !query || key.includes(query) || (item.deviceId && item.deviceId.includes(query)) || (item.isBlocked && 'محظور'.includes(query));
+        if (!matchSearch) continue;
+
+        const status = getStatusFor(item);
+        // فلتر
+        if (filter === 'valid' && status.text !== 'صالح') continue;
+        if (filter === 'expired' && status.text !== 'منتهي') continue;
+        if (filter === 'blocked' && status.text !== 'محظور') continue;
+
+        rows.push({code:key, item});
+      }
+
+      // بناء HTML
+      codesBody.innerHTML = '';
+      if (rows.length === 0) {
+        codesBody.innerHTML = <tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد نتائج</td></tr>;
+        return;
+      }
+
+      for (const r of rows) {
+        const code = r.code;
+        const it = r.item;
+        const status = getStatusFor(it);
+
+        const tr = document.createElement('tr');
+
+        const tdCode = document.createElement('td'); tdCode.textContent = code;
+        const tdDevice = document.createElement('td'); tdDevice.textContent = it.deviceId || '—';
+        const tdExpiry = document.createElement('td'); tdExpiry.textContent = it.expiry ? formatDateTime(it.expiry) : 'غير محدد';
+        const tdStatus = document.createElement('td'); 
+        const span = document.createElement('span'); span.className = 'tag ' + (status.cls||''); span.textContent = status.text;
+        tdStatus.appendChild(span);
+
+        const tdActions = document.createElement('td'); tdActions.className = 'actions';
+        // أزرار: مسح deviceId / حظر / فك الحظر / حذف / تعديل expiry
+        const btnClearDevice = document.createElement('button'); btnClearDevice.innerHTML = '<i class="fas fa-times"></i> مسح جهاز';
+        btnClearDevice.title = 'مسح deviceId لفتح التفعيل على جهاز آخر';
+        btnClearDevice.onclick = () => clearDevice(code);
+
+        const btnToggleBlock = document.createElement('button'); 
+        btnToggleBlock.innerHTML = it.isBlocked ? '<i class="fas fa-lock-open"></i> رفع الحظر' : '<i class="fas fa-ban"></i> حظر';
+        btnToggleBlock.onclick = () => toggleBlock(code, !it.isBlocked);
+
+        const btnSetExpiry = document.createElement('button'); btnSetExpiry.innerHTML = '<i class="fas fa-clock"></i> تعديل انتهاء';
+        btnSetExpiry.onclick = () => promptSetExpiry(code, it);
+
+        const btnDelete = document.createElement('button'); btnDelete.innerHTML = '<i class="fas fa-trash"></i> حذف';
+        btnDelete.onclick = () => deleteCode(code);
+
+        tdActions.appendChild(btnClearDevice);
+        tdActions.appendChild(btnToggleBlock);
+        tdActions.appendChild(btnSetExpiry);
+        if (isAdmin) tdActions.appendChild(btnDelete); // الحذف يظهر فقط للأدمن
+
+        tr.appendChild(tdCode);
+        tr.appendChild(tdDevice);
+        tr.appendChild(tdExpiry);
+        tr.appendChild(tdStatus);
+        tr.appendChild(tdActions);
+
+        codesBody.appendChild(tr);
+      }
+    }
+
+    /**********************************************
+     * دوال CRUD — تفاعل مع Firebase
+     **********************************************/
+    async function createOrUpdateCode(code, hours){
+      if (!code) { showToast('اكتب كود', 'error'); return; }
+      const expiry = Date.now() + (Number(hours) || 0) * 3600*1000;
+      const payload = { expiry };
+      try {
+        await db.ref('approvedStudents/' + code).update(payload);
+        showToast('تم إنشاء/تحديث الكود بنجاح');
+        manualCodeInput.value = '';
+      } catch (err) {
+        console.error('createOrUpdate err', err); showToast('خطأ في إنشاء الكود', 'error');
+      }
+    }
+
+    async function clearDevice(code){
+      if (!confirm('هل تريد فعلاً مسح deviceId لهذا الكود؟ هذا سيسمح بتفعيل الكود على جهاز جديد.')) return;
+      try {
+        await db.ref('approvedStudents/' + code + '/deviceId').remove();
+        showToast('تم مسح deviceId للكود ' + code);
+      } catch (err) { console.error(err); showToast('فشل العملية', 'error'); }
+    }
+
+    async function toggleBlock(code, toBlock){
+      const action = toBlock ? 'حظر' : 'رفع الحظر';
+      if (!confirm(هل متأكد من ${action} الكود ${code} ؟)) return;
+      try {
+        await db.ref('approvedStudents/' + code + '/isBlocked').set(toBlock === true);
+        showToast(${action} تم بنجاح);
+      } catch (err) { console.error(err); showToast('فشل العملية', 'error'); }
+    }
+
+    async function promptSetExpiry(code, item){
+      const curr = item && item.expiry ? new Date(Number(item.expiry)).toLocaleString('ar-EG') : 'غير محدد';
+      const ans = prompt(تعديل انتهاء الصلاحية للكود ${code}\nالوقت الحالي: ${curr}\nأدخل عدد الساعات من الآن (مثلاً 720) أو اتركه فارغًا لإزالة الانتهاء:);
+      if (ans === null) return;
+      const h = ans.trim();
+      if (h === '') {
+        // إزالة الحقل expiry
+        if (!confirm('هل تريد إزالة حقل الانتهاء نهائيًا (سيصبح غير محدد)؟')) return;
+        try {
+          await db.ref('approvedStudents/' + code + '/expiry').remove();
+          showToast('تمت إزالة الانتهاء');
+        } catch (err) { console.error(err); showToast('فشل العملية', 'error'); }
+        return;
+      }
+      const hours = Number(h);
+      if (isNaN(hours) || hours <= 0) { showToast('أدخل قيمة ساعات صحيحة', 'error'); return; }
+      try {
+        const newExpiry = Date.now() + hours*3600*1000;
+        await db.ref('approvedStudents/' + code + '/expiry').set(newExpiry);
+        showToast('تم تعديل الانتهاء بنجاح');
+      } catch (err) { console.error(err); showToast('فشل العملية', 'error'); }
+    }
+
+    async function deleteCode(code){
+      if (!isAdmin){ showToast('ليس لديك صلاحية الحذف', 'error'); return; }
+      if (!confirm('حذف الكود سيحذفه نهائيًا من قاعدة البيانات. تأكيد؟')) return;
+      try {
+        await db.ref('approvedStudents/' + code).remove();
+        showToast('تم حذف الكود ' + code);
+      } catch (err) { console.error(err); showToast('فشل الحذف', 'error'); }
+    }
+
+    /**********************************************
+     * أزرار توليد/إنشاء/تصدير
+     **********************************************/
+    genCodeBtn.addEventListener('click', async () => {
+      const code = generate6Digits();
+      // مدة افتراضية 30 يوم = 720 ساعة
+      const defaultHours = 720;
+      try {
+        await db.ref('approvedStudents/' + code).set({ expiry: Date.now() + defaultHours*3600*1000 });
+        showToast('تم توليد كود: ' + code);
+      } catch (err) { console.error(err); showToast('فشل التوليد', 'error'); }
+    });
+
+    openCreateBtn.addEventListener('click', () => {
+      // ضع الكود المولد في الحقل لسهولة التعديل
+      manualCodeInput.value = generate6Digits();
+      manualCodeInput.focus();
+    });
+
+    createManualBtn.addEventListener('click', () => {
+      const code = manualCodeInput.value.trim();
+      const hours = expiryHours.value;
+      if (!code) { showToast('ادخل كود'); return; }
+      createOrUpdateCode(code, hours);
+    });
+
+    exportBtn.addEventListener('click', () => {
+      // توليد CSV من liveData
+      const rows = [['code','deviceId','expiry_timestamp','expiry_human','isBlocked']];
+      for (const k of Object.keys(liveData || {})) {
+        const it = liveData[k] || {};
+        const expiry = it.expiry || '';
+        const human = expiry ? new Date(Number(expiry)).toLocaleString('ar-EG') : '';
+        rows.push([k, it.deviceId || '', expiry, human, it.isBlocked ? 'true' : 'false']);
+      }
+      const csv = rows.map(r => r.map(cell => "${String(cell).replace(/"/g,'""')}").join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = approvedStudents_export_${Date.now()}.csv; document.body.appendChild(a); a.click();
+      a.remove(); URL.revokeObjectURL(url);
+      showToast('تم تصدير CSV');
+    });
+
+    /**********************************************
+     * فلتر وبحث — استدعاء عرض جديد عند تغيّر
+     **********************************************/
+    searchInput.addEventListener('input', () => renderTable(liveData));
+    filterSelect.addEventListener('change', () => renderTable(liveData));
+
+    /**********************************************
+     * بدء التشغيل (عرض) — اذا الادمن فعلاً سجل دخول تلقائي
+     **********************************************/
+    // لو عايز تفعيل الدخول الآلي بناء على كوكِز/لوكل ستورج: افحص هنا
+    // حالياً نعرض شاشة دخول إجبارية في الأعلى
+
+    /**********************************************
+     * نصائح أمنية داخلية للمطور:
+     * - استخدم Firebase Auth بدل كلمة السر في الكود.
+     * - عدّل قواعد Realtime DB للسماح للــ admin فقط بالكتابة.
+     * - احذف ADMIN_PASSWORD من الكود قبل النشر العام.
+     **********************************************/
+  </script>
 </body>
 </html>
