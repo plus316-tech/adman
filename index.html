@@ -1,158 +1,178 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>THE BEST - تسجيل دخول الطالب</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; font-family:'Cairo',sans-serif; }
-    body {
-      margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
-      background:radial-gradient(circle at top left,#141E30,#243B55);
-      color:white; overflow:hidden;
-    }
-    .login-box {
-      background:rgba(0,0,0,0.6);padding:40px;border-radius:20px;
-      width:90%;max-width:400px;text-align:center;
-      box-shadow:0 0 20px rgba(0,255,255,0.2);
-    }
-    .login-box input {
-      width:100%;padding:14px;border-radius:12px;margin-bottom:15px;
-      background:#111;color:#fff;font-size:18px;border:none;outline:none;
-      text-align:center;box-shadow:0 0 10px rgba(0,255,255,0.3);
-    }
-    button {
-      width:100%;padding:12px;font-size:18px;border:none;
-      border-radius:8px;background:linear-gradient(90deg,#00c6ff,#0072ff);
-      color:white;cursor:pointer;transition:.3s;
-    }
-    button:hover { transform:scale(1.05); }
-    .error { color:#ff4f4f; }
-    .success { color:#00f5c4; }
-    #contactDev {
-      margin-top:15px;display:none;padding:10px;border-radius:10px;
-      background:linear-gradient(90deg,#25d366,#128c7e);
-      color:white;text-decoration:none;font-size:16px;
-      display:flex;align-items:center;gap:8px;justify-content:center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم الأكواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;}
+body{background:#0f0f12;color:white;padding:20px;}
+.card{
+    background:#1b1b1f;padding:20px;margin-bottom:20px;border-radius:12px;
+    box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+input,select{
+    width:100%;padding:12px;margin:7px 0;border-radius:8px;
+    border:none;background:#2a2a30;color:white;font-size:16px;
+}
+button{
+    width:100%;padding:14px;background:#4e00ff;border:none;border-radius:10px;
+    color:white;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px;
+}
+table{
+    width:100%;border-collapse:collapse;margin-top:20px;
+}
+th,td{
+    padding:12px;border-bottom:1px solid #333;text-align:center;
+}
+.action-btn{
+    padding:6px 10px;border:none;border-radius:6px;color:white;cursor:pointer;
+}
+.del{background:#e6004c;}
+.copy{background:#0077ff;}
+</style>
 </head>
-
 <body>
-  <div class="login-box">
-    <h1>THE BEST</h1>
-    <h2>ادخل كود الدخول</h2>
 
-    <input type="text" id="codeInput" placeholder="CODE">
-    <button onclick="verifyCode()">تسجيل الدخول</button>
+<h1 style="text-align:center;margin-bottom:20px;">📌 لوحة تحكم الأكواد</h1>
 
-    <p id="status"></p>
+<!-- توليد الأكواد -->
+<div class="card">
+    <h2>⚡ توليد أكواد تلقائياً</h2>
 
-    <a id="contactDev" href="https://wa.me/201001257486" target="_blank">
-      <img src="https://img.icons8.com/color/48/000000/whatsapp--v1.png" width="20">
-      تواصل مع المطور
-    </a>
-  </div>
+    <label>عدد الأكواد</label>
+    <input id="autoCount" type="number" placeholder="مثال: 20">
+
+    <label>مدة الصلاحية</label>
+    <select id="autoDurationType">
+        <option value="minutes">بالدقائق</option>
+        <option value="hours">بالساعات</option>
+        <option value="days">بالأيام</option>
+    </select>
+
+    <label>قيمة المدة</label>
+    <input id="autoDurationValue" type="number" placeholder="مثال: 60">
+
+    <button onclick="generateAutoCodes()">✔ توليد الأكواد</button>
+</div>
+
+<!-- جدول الأكواد -->
+<div class="card">
+    <h2>📋 الأكواد الحالية</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>الكود</th>
+                <th>تاريخ الانتهاء</th>
+                <th>نسخ</th>
+                <th>حذف</th>
+            </tr>
+        </thead>
+        <tbody id="codesTable"></tbody>
+    </table>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
 
 <script>
+// -----------------------
+//  Firebase Config
+// -----------------------
 const firebaseConfig = {
-  databaseURL: "https://website-83e14-default-rtdb.firebaseio.com/"
+    apiKey: "YOUR-API-KEY",
+    authDomain: "YOUR-PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR-PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR-PROJECT-ID",
+    storageBucket: "YOUR-PROJECT.appspot.com",
+    messagingSenderId: "ID",
+    appId: "APP-ID"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔥 إنشاء deviceId ثابت
-const deviceId = localStorage.getItem("deviceId") || generateDeviceId();
-localStorage.setItem("deviceId", deviceId);
-
-function generateDeviceId() {
-  return "DEV-" + Math.random().toString(36).substring(2, 12);
+// ------------------------
+//   توليد كود عشوائي
+// ------------------------
+function generateCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let c = "";
+    for (let i = 0; i < 6; i++)
+        c += chars[Math.floor(Math.random() * chars.length)];
+    return c;
 }
 
-// ======================
-//  التحقق من الكود
-// ======================
-function verifyCode() {
-  const code = document.getElementById("codeInput").value.trim();
-  const status = document.getElementById("status");
-  const btn = document.getElementById("contactDev");
+// ------------------------
+//   توليد أكواد تلقائي
+// ------------------------
+function generateAutoCodes() {
+    const count = parseInt(document.getElementById("autoCount").value);
+    const type = document.getElementById("autoDurationType").value;
+    const val = parseInt(document.getElementById("autoDurationValue").value);
 
-  status.textContent = "جارٍ التحقق...";
-  status.className = "";
-  btn.style.display = "none";
+    if (!count || count <= 0) return alert("❌ اكتب عدد الأكواد");
+    if (!val) return alert("❌ اكتب المدة");
 
-  if (code === "") {
-    status.textContent = "❌ أدخل الكود أولاً";
-    status.className = "error";
-    return;
-  }
+    for (let i = 0; i < count; i++) {
+        let code = generateCode();
 
-  db.ref("codes").orderByChild("code").equalTo(code).once("value", (snapshot) => {
-    if (!snapshot.exists()) {
-      status.textContent = "❌ الكود غير صحيح.";
-      status.className = "error";
-      btn.style.display = "flex";
-      return;
+        let expires = Date.now();
+        if (type === "minutes") expires += val * 60000;
+        if (type === "hours")   expires += val * 3600000;
+        if (type === "days")    expires += val * 86400000;
+
+        db.ref("approvedCodes/" + code).set({
+            expiresAt: expires,
+            usedBy: "",
+            deviceId: "",
+            active: true,
+            createdAt: Date.now()
+        });
     }
 
-    const key = Object.keys(snapshot.val())[0];
-    const data = snapshot.val()[key];
-
-    const now = Date.now();
-
-    // إذا لم يتم التفعيل من قبل ⇦ أنشئ انتهاء صلاحية
-    if (!data.deviceId) {
-      let expireTime;
-
-      if (data.type === "trial") {
-        expireTime = now + data.minutes * 60000;
-      }
-      else if (data.type === "sub") {
-        expireTime = now + data.days * 24 * 60 * 60 * 1000;
-      }
-      else {
-        status.textContent = "⚠ كود غير مضبوط.";
-        status.className = "error";
-        return;
-      }
-
-      db.ref("codes/" + key).update({
-        deviceId: deviceId,
-        expire: expireTime
-      });
-
-      status.textContent = "✅ تم التفعيل لأول مرة!";
-      status.className = "success";
-      // window.location.href = "student.html";
-      return;
-    }
-
-    // تحقق الجهاز
-    if (data.deviceId !== deviceId) {
-      status.textContent = "⚠ هذا الكود مفعل على جهاز آخر.";
-      status.className = "error";
-      return;
-    }
-
-    // تحقق انتهاء الصلاحية
-    if (data.expire <= now) {
-      status.textContent = "⛔ انتهت صلاحية الكود.";
-      status.className = "error";
-      return;
-    }
-
-    // نجاح
-    status.textContent = "✅ تسجيل دخول ناجح!";
-    status.className = "success";
-    // window.location.href = "student.html";
-  });
+    alert("✔ تم توليد " + count + " كود بنجاح");
 }
+
+// ------------------------
+//     تحميل الأكواد
+// ------------------------
+function loadCodes() {
+    const table = document.getElementById("codesTable");
+    db.ref("approvedCodes").on("value", snap => {
+        table.innerHTML = "";
+        snap.forEach(codeSnap => {
+            const code = codeSnap.key;
+            const data = codeSnap.val();
+            const endDate = new Date(data.expiresAt).toLocaleString();
+
+            table.innerHTML += `
+                <tr>
+                    <td>${code}</td>
+                    <td>${endDate}</td>
+                    <td><button class="action-btn copy" onclick="copyCode('${code}')">📋</button></td>
+                    <td><button class="action-btn del" onclick="deleteCode('${code}')">🗑</button></td>
+                </tr>
+            `;
+        });
+    });
+}
+
+// نسخ الكود
+function copyCode(code) {
+    navigator.clipboard.writeText(code);
+    alert("✔ تم نسخ الكود: " + code);
+}
+
+// حذف كود
+function deleteCode(code) {
+    if (confirm("هل تريد حذف الكود؟")) {
+        db.ref("approvedCodes/" + code).remove();
+    }
+}
+
+loadCodes();
 </script>
 
 </body>
