@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء الأكواد - لوحة الأدمن</title>
+
+<style>
+    body {
+        font-family: 'Cairo', sans-serif;
+        background: #f4f6f9;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 450px;
+        background: #fff;
+        padding: 25px;
+        margin: auto;
+        border-radius: 12px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+    }
+    label {
+        font-weight: 600;
+        display: block;
+        margin-top: 15px;
+    }
+    input, select, button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 7px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        margin-top: 25px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    button:hover {
+        background: #0056b3;
+    }
+    .success {
+        margin-top: 20px;
+        padding: 12px;
+        background: #d4edda;
+        color: #155724;
+        border-radius: 8px;
+        display: none;
+        font-weight: 600;
+    }
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>إنشاء كود جديد</h2>
+
+    <label>الكود</label>
+    <input type="text" id="code" placeholder="اكتب الكود">
+
+    <label>نوع الكود</label>
+    <select id="codeType">
+        <option value="single">لمرة واحدة</option>
+        <option value="multi">لأكثر من جهاز</option>
+        <option value="open">مفتوح (بدون حد)</option>
+    </select>
+
+    <label>الحد الأقصى للأجهزة</label>
+    <input type="number" id="maxDevices" value="1">
+
+    <label>مدة الصلاحية (بالأيام)</label>
+    <input type="number" id="validDays" value="30">
+
+    <button onclick="createCode()">إنشاء الكود</button>
+
+    <div id="success" class="success">تم إنشاء الكود بنجاح ✔️</div>
+</div>
+
+
+<script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyAdz_OsGPL5xEq-J72FCkuQezVMhU_FATo",
+  authDomain: "website-83e14.firebaseapp.com",
+  databaseURL: "https://website-83e14-default-rtdb.firebaseio.com",
+  projectId: "website-83e14",
+  storageBucket: "website-83e14.firebasestorage.app",
+  messagingSenderId: "994953388464",
+  appId: "1:994953388464:web:9c244de2a4fdcf8561f675",
+  measurementId: "G-7PN256M5PG"
+};
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function createCode() {
+        const code = document.getElementById("code").value.trim();
+        const type = document.getElementById("codeType").value;
+        const maxDevices = parseInt(document.getElementById("maxDevices").value);
+        const days = parseInt(document.getElementById("validDays").value);
+
+        if (!code) {
+            alert("اكتب الكود أولاً");
+            return;
+        }
+
+        const expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + days);
+
+        await db.collection("activationCodes").doc(code).set({
+            code: code,
+            type: type,
+            maxDevices: type === "open" ? 999999 : maxDevices,
+            usedDevices: 0,
+            createdAt: new Date().toISOString(),
+            expireAt: expireDate.toISOString()
+        });
+
+        document.getElementById("success").style.display = "block";
+        setTimeout(() => {
+            document.getElementById("success").style.display = "none";
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>
