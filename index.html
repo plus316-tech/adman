@@ -178,6 +178,17 @@
     </div>
   </div>
 
+  <div id="codesModal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;">
+  <div style="background:#141418;padding:20px;border-radius:12px;max-width:400px;width:90%;">
+    <textarea id="modalCodesList" style="width:100%;height:150px;background:#0f0f12;color:#fff;padding:10px;border-radius:8px;border:none;"></textarea>
+    <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:10px;">
+      <button id="copyModalCodesBtn" style="padding:8px 12px;background:#1f8bff;border:none;border-radius:8px;color:#fff;">نسخ</button>
+      <button id="closeModalBtn" style="padding:8px 12px;background:#ff3b3b;border:none;border-radius:8px;color:#fff;">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+
   <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
