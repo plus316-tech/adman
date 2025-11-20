@@ -487,10 +487,24 @@ function updateStats(){
 }
 
 /******* Generation *******/
+// استمع للأزرار
 genSingleBtn.addEventListener('click', generateSingleCode);
 genBtn.addEventListener('click', generateAutoCodes);
 exportBtn.addEventListener('click', exportCodesCSV);
 
+// عناصر المودال (تأكد إنك ضيفتهم في HTML)
+const codesModal = document.getElementById('codesModal');
+const modalCodesList = document.getElementById('modalCodesList');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const copyModalCodesBtn = document.getElementById('copyModalCodesBtn');
+
+closeModalBtn.onclick = () => codesModal.classList.add('hidden');
+copyModalCodesBtn.onclick = () => {
+  navigator.clipboard.writeText(modalCodesList.value);
+  alert('✔ تم نسخ كل الأكواد');
+};
+
+// توليد كود واحد
 async function generateSingleCode(){
   if(!auth.currentUser || !isAdminUID(auth.currentUser.uid)) return alert('غير مسموح');
   const type = codeType.value;
@@ -507,9 +521,13 @@ async function generateSingleCode(){
     createdAt: Date.now()
   };
   await db.ref('approvedCodes/'+code).set(payload);
-  alert('تم إنشاء كود: ' + code);
+  
+  // عرض المودال مع الكود الجديد
+  modalCodesList.value = code;
+  codesModal.classList.remove('hidden');
 }
 
+// توليد أكواد متعددة
 async function generateAutoCodes(){
   if(!auth.currentUser || !isAdminUID(auth.currentUser.uid)) return alert('غير مسموح');
   const count = parseInt(autoCount.value) || 0;
@@ -520,8 +538,10 @@ async function generateAutoCodes(){
   if(!val) return alert('اكتب قيمة المدة');
   const durationMinutes = msFrom(val, unit);
   const updates = {};
+  const codesArr = [];
   for(let i=0;i<count;i++){
     const code = generateCode();
+    codesArr.push(code);
     updates['approvedCodes/'+code] = {
       duration: durationMinutes,
       type,
@@ -531,7 +551,10 @@ async function generateAutoCodes(){
     };
   }
   await db.ref().update(updates);
-  alert('✔ تم توليد ' + count + ' كود');
+  
+  // عرض المودال مع الأكواد الجديدة
+  modalCodesList.value = codesArr.join('\n');
+  codesModal.classList.remove('hidden');
 }
 
 /******* Export CSV *******/
